@@ -16,3 +16,9 @@ This repository contains code generation cli utility and swift framework which p
 3. `mkdir release`
 4. `cp ./.build/release/anytype-swift-codegen ./release`
 5. `cp ./.build/release/swift-format ./release`
+
+## How to use tool.
+
+1. `./anytype-swift-codegen help`
+2. `./anytype-swift-codegen help generate`
+3. `./anytype-swift-codegen help [command_name]`
