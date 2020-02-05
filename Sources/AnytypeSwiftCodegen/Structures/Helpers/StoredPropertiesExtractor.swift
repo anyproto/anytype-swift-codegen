@@ -45,7 +45,7 @@ class StoredPropertiesExtractor: SyntaxRewriter {
         }
         
         private let setterVariableGroupName: String = "setterVariable"
-        private let setterVariablePattern: NSRegularExpression = (try? NSRegularExpression(pattern: "\\.(?<setterVariable>[^\\.=]+)\\s*=")) ?? NSRegularExpression()
+        private let setterVariablePattern: NSRegularExpression = (try? NSRegularExpression(pattern: "(?<setterVariable>[^=]+)\\s*=")) ?? NSRegularExpression()
         
         private func setters(setter: AccessorDeclSyntax?, variable: Variable) -> Variable.Accessor {
             guard let body = setter?.body else { return .getter }
