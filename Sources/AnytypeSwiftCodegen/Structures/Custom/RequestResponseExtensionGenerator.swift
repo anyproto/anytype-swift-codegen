@@ -12,6 +12,8 @@ public class RequestResponseExtensionGenerator: SyntaxRewriter {
         var templatePaths: [String] = []
         var requestName: String = "Request"
         var responseName: String = "Response"
+        var serviceFilePath: String = ""
+        var bestMatchThreshold: Int = 8 // size of scope name + 1.
     }
     
     var options: Options = .init()
@@ -22,6 +24,11 @@ public class RequestResponseExtensionGenerator: SyntaxRewriter {
     
     public func with(templatePaths: [String]) -> Self {
         self.options.templatePaths = templatePaths
+        return self
+    }
+    public func with(serviceFilePath: String) -> Self {
+        self.options.serviceFilePath = serviceFilePath
+        _ = self.scopeMatcher.with(serviceFilePath).with(self.options.bestMatchThreshold)
         return self
     }
     
@@ -56,6 +63,8 @@ public class RequestResponseExtensionGenerator: SyntaxRewriter {
     var templateGenerator: TemplateGenerator = .init()
     var publicInvocationGenerator: PublicInvocationGenerator = .init()
     var storedPropertiesExtractor: StoredPropertiesExtractor = .init()
+    var scopeMatcher: ScopeMatcher = .init()
+    
     enum ServicePart {
         case publicInvocation(Scope)
         case template
@@ -125,10 +134,15 @@ extension RequestResponseExtensionGenerator: Generator {
             let scopeName = value.scope.this.fullIdentifier
             let scopeTypeSyntax = SyntaxFactory.makeTypeIdentifier(scopeName)
             // NOTE: scopeName except first scope. Custom behaviour.
-            let className = scopeName.split(separator: ".").dropFirst().joined()
+            
+            guard let suffix = self.scopeMatcher.bestRpc(for: value.scope)?.name else {
+                return SyntaxFactory.makeBlankSourceFile()
+            }
+            
+            // if suffix not found, we should return empty syntax.
             
             // first, add invocation
-            let generator = PrivateInvocationGenerator().with(className: className)
+            let generator = PrivateInvocationGenerator().with(suffix: suffix)
             let invocationSyntax = generator.generate(.structure).raw()
             
             // next, add service
@@ -157,5 +171,54 @@ extension RequestResponseExtensionGenerator: Generator {
         let codeBlockItemListSyntax = self.scan(node).compactMap(self.generate).compactMap(CodeBlockItemSyntax.init{_ in}.withItem)        
         let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
         return result
+    }
+}
+
+extension RequestResponseExtensionGenerator {
+    class ScopeMatcher {
+        private var service: RpcServiceFileParser.ServiceParser.Service?
+        private var threshold: Int = 0
+        func with(_ threshold: Int) -> Self {
+            self.threshold = threshold
+            return self
+        }
+        func with(_ filePath: String) -> Self {
+            self.service = RpcServiceFileParser.init(options: .init(filePath: filePath)).parse(filePath)
+            return self
+        }
+        init() {}
+        
+        // Given two strings:
+        // A = "abcdef"
+        // B = "lkmabcdef"
+        // This function return result
+        // C = (0, length(lkm))
+        func sufficiesDifference(lhs: String, rhs: String) -> (Int, Int) {
+            let left = lhs.reversed()
+            let right = rhs.reversed()
+            var leftStartIndex = left.startIndex
+            var rightStartIndex = right.startIndex
+            let leftEndIndex = left.endIndex
+            let rightEndIndex = right.endIndex
+            
+            while leftStartIndex != leftEndIndex, rightStartIndex != rightEndIndex, left[leftStartIndex] == right[rightStartIndex] {
+//                print("\(left[leftStartIndex]) == \(right[rightStartIndex])")
+                leftStartIndex = left.index(after: leftStartIndex)
+                rightStartIndex = right.index(after: rightStartIndex)
+            }
+            return (
+                left.distance(from: leftStartIndex, to: leftEndIndex),
+                right.distance(from: rightStartIndex, to: rightEndIndex)
+            )
+        }
+        
+        func bestRpc(for scope: Scope) -> RpcServiceFileParser.ServiceParser.Service.Endpoint? {
+            guard let service = service else { return nil }
+            return service.endpoints.compactMap { (value) in
+                (value, self.sufficiesDifference(lhs: scope.request.fullIdentifier, rhs: value.request))
+            }.compactMap{($0.0, max($0.1.0, $0.1.1))}.sorted { (left, right) -> Bool in
+                left.1 < right.1
+                }.first(where: {$0.1 <= self.threshold})?.0
+        }
     }
 }
