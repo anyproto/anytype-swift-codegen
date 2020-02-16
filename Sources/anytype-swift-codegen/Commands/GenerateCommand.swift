@@ -15,13 +15,24 @@ import AnytypeSwiftCodegen
 struct GenerateCommand: CommandProtocol
 {
     
+    enum FileExtensions {
+        case swiftExtension
+        case protobufExtension
+        func extName() -> String {
+            switch self {
+            case .swiftExtension: return "swift"
+            case .protobufExtension: return "proto"
+            }
+        }
+    }
+    
     enum Error: Swift.Error {
-        static let swiftExtension = "swift"
         case inputFileNotExists(String)
         case outputFileNotExists(String)
+        case serviceFileNotExists(String)
         case filesAreEqual(String, String)
         case filesAreCorrupted
-        case fileShouldHaveSwiftExtension(String)
+        case fileShouldHaveExtension(String, FileExtensions)
         case transformDoesntExist(String)
     }
 
@@ -54,16 +65,25 @@ struct GenerateCommand: CommandProtocol
     }
     
     private func processTransform(source: File, target: File, options: Options) throws {
-        guard source.extension == Error.swiftExtension else {
-            throw Error.fileShouldHaveSwiftExtension(source.path)
+        guard source.extension == FileExtensions.swiftExtension.extName() else {
+            throw Error.fileShouldHaveExtension(source.path, .swiftExtension)
         }
         
-        guard target.extension == Error.swiftExtension else {
-            throw Error.fileShouldHaveSwiftExtension(target.path)
+        guard target.extension == FileExtensions.swiftExtension.extName() else {
+            throw Error.fileShouldHaveExtension(target.path, .swiftExtension)
         }
         
         guard let transform = Transform.create(options.transform) else {
             throw Error.transformDoesntExist(options.transform)
+        }
+         
+        if transform == .requestAndResponse {
+            guard let serviceFile = try? File(path: options.serviceFilePath) else {
+                throw Error.serviceFileNotExists(options.serviceFilePath)
+            }
+            guard serviceFile.extension == FileExtensions.protobufExtension.extName() else {
+                throw Error.fileShouldHaveExtension(serviceFile.path, .protobufExtension)
+            }
         }
         
         let t1 = DispatchTime.now()
@@ -104,6 +124,7 @@ extension GenerateCommand {
         fileprivate let templateFilePath: String
         fileprivate let commentsHeaderFilePath: String
         fileprivate let importsFilePath: String
+        fileprivate let serviceFilePath: String
         
         fileprivate static let defaultStringValue: String = ""
         
@@ -117,6 +138,7 @@ extension GenerateCommand {
                 <*> m <| Option(key: "templateFilePath", defaultValue: defaultStringValue, usage: "Template file that should be used in some transforms")
                 <*> m <| Option(key: "commentsHeaderFilePath", defaultValue: defaultStringValue, usage: "Comments header file that will be included at top")
                 <*> m <| Option(key: "importsFilePath", defaultValue: defaultStringValue, usage: "Import file that will be included at top after comments if presented")
+                <*> m <| Option(key: "serviceFilePath", defaultValue: defaultStringValue, usage: "Rpc service file that contains Rpc services descriptions in .proto (protobuffers) format.")
         }
     }
 }
@@ -127,7 +149,7 @@ extension GenerateCommand {
         func transform(options: Options) -> (SourceFileSyntax) -> Syntax {
             switch self {
             case .errorAdoption: return ErrorProtocolAdoptionGenerator().generate
-            case .requestAndResponse: return RequestResponseExtensionGenerator().with(templatePaths: [options.templateFilePath]).generate
+            case .requestAndResponse: return RequestResponseExtensionGenerator().with(templatePaths: [options.templateFilePath]).with(serviceFilePath: options.serviceFilePath).generate
             case .memberwiseInitializer: return MemberwiseConvenientInitializerGenerator().generate
             }
         }
