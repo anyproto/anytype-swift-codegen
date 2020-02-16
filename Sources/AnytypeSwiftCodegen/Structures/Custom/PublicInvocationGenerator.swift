@@ -19,7 +19,7 @@ class PublicInvocationGenerator: SyntaxRewriter {
     struct Options {
         var invocationMethodName = "result"
         var functionName = "invoke"
-        var closureVariableName = "completion"
+        var closureVariableName = "promise"
         var resultType: String = "Future<Response, Error>"
     }
     static func convert(_ variables: [StoredPropertiesExtractor.VariableFilter.Variable]) -> [(String, String)] {
