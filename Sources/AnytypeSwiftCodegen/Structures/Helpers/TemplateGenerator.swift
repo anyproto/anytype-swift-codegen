@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  TemplateGenerator.swift
 //  
 //
 //  Created by Dmitry Lobanov on 23.01.2020.

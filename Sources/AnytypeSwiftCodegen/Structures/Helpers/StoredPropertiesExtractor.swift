@@ -49,7 +49,6 @@ class StoredPropertiesExtractor: SyntaxRewriter {
         
         private func setters(setter: AccessorDeclSyntax?, variable: Variable) -> Variable.Accessor {
             guard let body = setter?.body else { return .getter }
-        // check that
             if #available(OSX 10.13, *) {
                 let variableName = variable.name.trimmingCharacters(in: .whitespacesAndNewlines)
                 let bodyDescription = body.description
