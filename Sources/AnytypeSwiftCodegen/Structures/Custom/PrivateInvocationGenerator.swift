@@ -20,6 +20,7 @@ class PrivateInvocationGenerator: SyntaxRewriter {
         var callee: String = "Lib" // Lib.methodName
         var prefix: String = "Lib" // callee.<Lib>methodName
         var className: String = "Abc.Def" // Lib.LibAbcDef
+        var suffix: String = ""
         var name: String = "Invocation"
         var functionName: String = "invoke"
         var parameterName: String = "data"
@@ -32,8 +33,8 @@ class PrivateInvocationGenerator: SyntaxRewriter {
     }
     override init() {}
     
-    func with(className name: String) -> Self {
-        self.options.className = name
+    func with(suffix: String) -> Self {
+        self.options.suffix = suffix
         return self
     }
 
@@ -57,7 +58,7 @@ class PrivateInvocationGenerator: SyntaxRewriter {
         case .invocation:
             let calleeName = options.callee
             let parameterName = options.parameterName
-            let invocation = options.prefix + options.className.replacingOccurrences(of: ".", with: "")
+            let invocation = options.prefix + options.suffix
 
             let argumentList = SyntaxFactory.makeFunctionCallArgumentList([
                 .init { b in b.useExpression(SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(parameterName), declNameArguments: nil)) }
