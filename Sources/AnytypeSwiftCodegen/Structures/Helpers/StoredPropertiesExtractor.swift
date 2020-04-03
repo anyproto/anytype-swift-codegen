@@ -16,9 +16,7 @@ class StoredPropertiesExtractor: SyntaxRewriter {
     class VariableFilter {
         struct Variable {
             static let zero = Variable()
-            func isEmpty() -> Bool {
-                return nameSyntax == nil
-            }
+            func isEmpty() -> Bool { nameSyntax == nil }
             enum Accessor: CustomStringConvertible {
                 case none
                 case getter

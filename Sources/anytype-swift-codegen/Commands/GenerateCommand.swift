@@ -129,7 +129,7 @@ extension GenerateCommand {
         fileprivate static let defaultStringValue: String = ""
         
         public static func evaluate(_ m: CommandMode) -> Result<Self, CommandantError<Swift.Error>> {
-            return curry(Self.init)
+            curry(Self.init)
                 <*> m <| Option(key: "filePath", defaultValue: defaultStringValue, usage: "The path to the file in 'generate' action.")
                 <*> m <| Switch(flag: "d", key: "debug", usage: "DEBUG")
                 <*> m <| Option(key: "outputFilePath", defaultValue: defaultStringValue, usage: "Use with flag --filePath. It will output to this file")
@@ -168,7 +168,7 @@ extension GenerateCommand {
             }
         }
         static func create(_ shortcutOrName: String) -> Self? {
-            return Self.init(rawValue: shortcutOrName) ?? .create(shortcut: shortcutOrName)
+            Self.init(rawValue: shortcutOrName) ?? .create(shortcut: shortcutOrName)
         }
         static func create(shortcut: String) -> Self? {
             allCases.first(where: {$0.shortcut() == shortcut})
