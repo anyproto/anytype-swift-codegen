@@ -52,7 +52,6 @@ class StoredPropertiesExtractor: SyntaxRewriter {
                 let bodyDescription = body.description
                 let ranges = self.setterVariablePattern.matches(in: bodyDescription, options: [], range: NSRange.init(location: 0, length: bodyDescription.count)).filter{$0.numberOfRanges > 0}.map {$0.range(withName: self.setterVariableGroupName)}
                 let containsVariableAtLeft = [ranges.first].compactMap{$0}.map{(bodyDescription as NSString).substring(with: $0).contains(variableName)}.allSatisfy({$0})
-                
                 return containsVariableAtLeft ? .setter : .getter
             } else {
                 // Fallback on earlier versions
@@ -67,7 +66,7 @@ class StoredPropertiesExtractor: SyntaxRewriter {
         private func accessor(accessor: Syntax?, variable: Variable) -> Variable.Accessor {
             guard let accessor = accessor else { return .none }
             
-            if CodeBlockItemSyntax(accessor) != nil {
+            if CodeBlockSyntax(accessor) != nil {
                 return .getter
             }
                 
