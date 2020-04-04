@@ -62,13 +62,13 @@ extension ErrorProtocolAdoptionGenerator: Generator {
         return SyntaxFactory.makeExtensionDecl(attributes: nil, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)), extendedType: extendedTypeSyntax, inheritanceClause: typeInheritanceClauseSyntax, genericWhereClause: nil, members: memberDeclBlockSyntax.withLeadingTrivia(.spaces(1)))
     }
     public func generate(_ node: SourceFileSyntax) -> Syntax {
-        
-        let items = node.statements.compactMap{$0.item as? DeclSyntaxProtocol}.compactMap(self.search).flatMap{$0}
+        let items = node.statements.compactMap{$0.item.asProtocol(DeclSyntaxProtocol.self)}.compactMap(self.search).flatMap{$0}
         let declarations = items.map(self.generate)
         
-        let statements = declarations.map(Syntax.init).compactMap(CodeBlockItemSyntax.init)
-
+        let statements = declarations.map(Syntax.init).compactMap{ value in CodeBlockItemSyntax.init { (b) in b.useItem(value) } }
+        
         let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(statements), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
+        
         return .init(result)
     }
 }
