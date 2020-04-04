@@ -31,6 +31,13 @@ public class RequestResponseExtensionGenerator: SyntaxRewriter {
         _ = self.scopeMatcher.with(serviceFilePath).with(self.options.bestMatchThreshold)
         return self
     }
+    // for debug
+    public func with(scopeMatcherAsDebug: Bool) -> Self {
+        if scopeMatcherAsDebug {
+            self.scopeMatcher = ScopeMatcher.debug
+        }
+        return self
+    }
     
     typealias DeclarationNotation = NestedTypesScanner.DeclarationNotation
     struct Scope {
@@ -135,8 +142,17 @@ extension RequestResponseExtensionGenerator: Generator {
             let scopeTypeSyntax = SyntaxFactory.makeTypeIdentifier(scopeName)
             // NOTE: scopeName except first scope. Custom behaviour.
             
-            guard let suffix = self.scopeMatcher.bestRpc(for: value.scope)?.name else {
+            var suffix = ""
+            guard let someSuffix = self.scopeMatcher.bestRpc(for: value.scope)?.name else {
                 return .init(SyntaxFactory.makeBlankSourceFile())
+            }
+            if self.scopeMatcher is ScopeMatcher.Debug {
+                // do something different
+                // use old scheme with class names.
+                suffix = scopeName.split(separator: ".").dropFirst().joined()
+            }
+            else {
+                suffix = someSuffix
             }
             
             // if suffix not found, we should return empty syntax.
@@ -147,10 +163,12 @@ extension RequestResponseExtensionGenerator: Generator {
             
             // next, add service
             let serviceSyntax = self.generate(part: .service(value), options: self.options)
-            
+                        
             // build members
             
-            let memberDeclList: [MemberDeclListItemSyntax] = [invocationSyntax, serviceSyntax].compactMap(MemberDeclListItemSyntax.init)
+            let memberDeclList: [MemberDeclListItemSyntax] = [invocationSyntax, serviceSyntax].compactMap(DeclSyntax.init).compactMap { (value) in
+                MemberDeclListItemSyntax.init { (b) in b.useDecl(value) }
+            }
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1)))
             
@@ -166,9 +184,10 @@ extension RequestResponseExtensionGenerator: Generator {
         }
     }
     func generate(scope: Scope) -> Syntax {
-        self.generate(part: .scope(.init(serviceName: self.options.serviceName, scope: scope)), options: self.options)
+        return self.generate(part: .scope(.init(serviceName: self.options.serviceName, scope: scope)), options: self.options)
     }
     public func generate(_ node: SourceFileSyntax) -> Syntax {
+        print("we are here?!")
         let codeBlockItemListSyntax = self.scan(node).compactMap(self.generate).compactMap(CodeBlockItemSyntax.init{_ in}.withItem)        
         let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
         return .init(result)
@@ -220,6 +239,15 @@ extension RequestResponseExtensionGenerator {
             }.compactMap{($0.0, max($0.1.0, $0.1.1))}.sorted { (left, right) -> Bool in
                 left.1 < right.1
                 }.first(where: {$0.1 <= self.threshold})?.0
+        }
+        
+        static var debug: ScopeMatcher = Debug()
+        
+        class Debug: ScopeMatcher {
+            var endpoint: RpcServiceFileParser.ServiceParser.Service.Endpoint = .init(name: "", request: "", response: "")
+            override func bestRpc(for scope: RequestResponseExtensionGenerator.Scope) -> RpcServiceFileParser.ServiceParser.Service.Endpoint? {
+                endpoint
+            }
         }
     }
 }
