@@ -100,7 +100,7 @@ final class RequestResponseExtensionGeneratorTests: XCTestCase
             
             enum Service {
             public static func invoke(name: String, seedCount: Int) -> Future<Response, Error> {
-            .init{completion in completion(self.result(.init(name: name, seedCount: seedCount)))}
+            .init{promise in promise(self.result(.init(name: name, seedCount: seedCount)))}
             }
             
             }
@@ -113,7 +113,7 @@ final class RequestResponseExtensionGeneratorTests: XCTestCase
             
             enum Service {
             public static func invoke(name: String, seed: String) -> Future<Response, Error> {
-            .init{completion in completion(self.result(.init(name: name, seed: seed)))}
+            .init{promise in promise(self.result(.init(name: name, seed: seed)))}
             }
             
             }
@@ -124,7 +124,7 @@ final class RequestResponseExtensionGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: RequestResponseExtensionGenerator()
+            using: RequestResponseExtensionGenerator().with(scopeMatcherAsDebug: true)
         )
     }
 }

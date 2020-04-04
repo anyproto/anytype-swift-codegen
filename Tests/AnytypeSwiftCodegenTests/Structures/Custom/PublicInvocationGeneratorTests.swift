@@ -19,7 +19,7 @@ final class PublicInvocationGeneratorTests: XCTestCase
 
         let expected = """
             public static func invoke(abc: String, def: Int) -> Future<Response, Error> {
-            .init{completion in completion(self.result(.init(abc: abc, def: def)))}
+            .init{promise in promise(self.result(.init(abc: abc, def: def)))}
             }
 
             """
