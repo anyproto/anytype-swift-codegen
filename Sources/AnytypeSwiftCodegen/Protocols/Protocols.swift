@@ -24,18 +24,16 @@ extension NestableDeclSyntaxProtocol
     {
         let name = self.identifier.withoutTrivia()
         var parent_ = self.parent
-
         let generate: (NestableDeclSyntaxProtocol) -> TypeSyntax = { value in
             .init(SyntaxFactory.makeMemberTypeIdentifier(baseType: value.fullIdentifier, period: SyntaxFactory.makePeriodToken(), name: name, genericArgumentClause: nil))
         }
         
         // `parent.fullIdentifier + self.identifier` if possible.
         while let parent = parent_ {
-            switch parent {
-            case let parent as NestableDeclSyntaxProtocol: return TypeSyntax(generate(parent))
-            default:
-                parent_ = parent.parent
+            if let declarationParent = parent.asProtocol(DeclSyntaxProtocol.self) as? NestableDeclSyntaxProtocol {
+                return TypeSyntax(generate(declarationParent))
             }
+            parent_ = parent.parent
         }
 
         return TypeSyntax(SyntaxFactory.makeSimpleTypeIdentifier(
