@@ -93,7 +93,7 @@ public class RequestResponseExtensionGenerator: SyntaxRewriter {
     }
     
     // MARK: Visits
-    override public func visit(_ node: SourceFileSyntax) -> Syntax {
+    override public func visit(_ node: SourceFileSyntax) -> Syntax {        
         self.generate(node)
     }
 }
@@ -105,11 +105,11 @@ extension RequestResponseExtensionGenerator: Generator {
             let structIdentifier = scope.request.fullIdentifier
             let properties = (scope.request.syntax as? StructDeclSyntax).flatMap(self.storedPropertiesExtractor.extract)
             let variables = properties?[structIdentifier]?.1
-            let result = variables.flatMap{self.publicInvocationGenerator.with(variables: $0)}.map{$0.generate(.function)}
-            return [result].compactMap{$0 as? DeclSyntax}
+            let result = variables.flatMap{self.publicInvocationGenerator.with(variables: $0)}.map{$0.generate(.function)}.flatMap(DeclSyntax.init)
+            return [result].compactMap{$0}
         case .template:
-            if let result = options.templatePaths.first.flatMap(self.templateGenerator.generate) as? SourceFileSyntax {
-                return result.statements.compactMap{$0.item as? DeclSyntax}
+            if let result = options.templatePaths.first.flatMap(self.templateGenerator.generate).flatMap(SourceFileSyntax.init) {
+                return result.statements.map(Syntax.init).compactMap(DeclSyntax.init)
             }
             return []
         }
@@ -128,7 +128,7 @@ extension RequestResponseExtensionGenerator: Generator {
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
             
             let result = SyntaxFactory.makeEnumDecl(attributes: nil, modifiers: nil, enumKeyword: SyntaxFactory.makeEnumKeyword().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.spaces(1)), identifier: serviceNameIdentifier, genericParameters: nil, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
-            return result
+            return .init(result)
             
         case let .scope(value):
             let scopeName = value.scope.this.fullIdentifier
@@ -136,7 +136,7 @@ extension RequestResponseExtensionGenerator: Generator {
             // NOTE: scopeName except first scope. Custom behaviour.
             
             guard let suffix = self.scopeMatcher.bestRpc(for: value.scope)?.name else {
-                return SyntaxFactory.makeBlankSourceFile()
+                return .init(SyntaxFactory.makeBlankSourceFile())
             }
             
             // if suffix not found, we should return empty syntax.
@@ -149,19 +149,20 @@ extension RequestResponseExtensionGenerator: Generator {
             let serviceSyntax = self.generate(part: .service(value), options: self.options)
             
             // build members
-            let memberDeclList: [MemberDeclListItemSyntax] = [invocationSyntax, serviceSyntax].compactMap{$0 as? DeclSyntax}.compactMap(MemberDeclListItemSyntax.init({_ in}).withDecl)
+            
+            let memberDeclList: [MemberDeclListItemSyntax] = [invocationSyntax, serviceSyntax].compactMap(MemberDeclListItemSyntax.init)
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1)))
             
             let attributesListSyntax = SyntaxFactory.makeAttributeList([
                 // TODO: Make it public when extended type will have access level public.
-                SyntaxFactory.makeInternalKeyword()//.makePublicKeyword()
-                    .withLeadingTrivia(.newlines(1)).withTrailingTrivia(.spaces(1))
+                .init(SyntaxFactory.makeInternalKeyword()//.makePublicKeyword()
+                    .withLeadingTrivia(.newlines(1)).withTrailingTrivia(.spaces(1)))
             ])
             
             let result = SyntaxFactory.makeExtensionDecl(attributes: attributesListSyntax, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)), extendedType: scopeTypeSyntax, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
             // and build extension
-            return result
+            return .init(result)
         }
     }
     func generate(scope: Scope) -> Syntax {
@@ -170,7 +171,7 @@ extension RequestResponseExtensionGenerator: Generator {
     public func generate(_ node: SourceFileSyntax) -> Syntax {
         let codeBlockItemListSyntax = self.scan(node).compactMap(self.generate).compactMap(CodeBlockItemSyntax.init{_ in}.withItem)        
         let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
-        return result
+        return .init(result)
     }
 }
 

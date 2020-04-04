@@ -14,7 +14,7 @@ import SwiftSyntax
 public class MemberwiseConvenientInitializerGenerator: SyntaxRewriter {
     public var options: Options = .init()
     open override func visit(_ syntax: SourceFileSyntax) -> Syntax {
-        self.generate(syntax)
+        .init(self.generate(syntax))
     }
 }
 
@@ -82,15 +82,15 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
                 }
                 b.useRightParen(SyntaxFactory.makeRightParenToken(leadingTrivia: [.spaces(0)], trailingTrivia: [.spaces(0)]))
             }
-            
+                                    
             let statements = variablesNamesAndTypes.map{$0.0}.compactMap {
-                CodeBlockItemSyntax.init{_ in }.withItem(SyntaxFactory.makeCodeBlockItemList([
-                    CodeBlockItemSyntax.init{_ in }.withItem(SyntaxFactory.makeSelfKeyword()),
-                    CodeBlockItemSyntax.init{_ in }.withItem(SyntaxFactory.makePeriodToken()),
-                    CodeBlockItemSyntax.init{_ in }.withItem(SyntaxFactory.makeIdentifier($0)),
-                    CodeBlockItemSyntax.init{_ in }.withItem(SyntaxFactory.makeAssignmentExpr(assignToken: SyntaxFactory.makeToken(.equal, presence: .present)).withLeadingTrivia([.spaces(1)]).withTrailingTrivia([.spaces(1)])),
-                    CodeBlockItemSyntax.init{_ in }.withItem(SyntaxFactory.makeIdentifier($0)),
-                ]))
+                CodeBlockItemSyntax(.init(SyntaxFactory.makeCodeBlockItemList([
+                    CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeSelfKeyword())),
+                    CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makePeriodToken())),
+                    CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeIdentifier($0))),
+                    CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeAssignmentExpr(assignToken: SyntaxFactory.makeToken(.equal, presence: .present)).withLeadingTrivia([.spaces(1)]).withTrailingTrivia([.spaces(1)]))),
+                    CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeIdentifier($0))),
+                ])))
             }
             
             
@@ -111,21 +111,21 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
             }
             
             let memberDeclList = SyntaxFactory.makeMemberDeclList([
-                .init{b in b.useDecl(initializer.withLeadingTrivia(singleLeadingTrivia))}
+                .init{b in b.useDecl(.init(initializer.withLeadingTrivia(singleLeadingTrivia)))}
             ])
             
             let membersDeclSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken(leadingTrivia: [.spaces(1)], trailingTrivia: [.newlines(1)]), members: memberDeclList, rightBrace: SyntaxFactory.makeRightBraceToken(leadingTrivia: [.newlines(0)]))
             
             let extensionDeclSyntax = SyntaxFactory.makeExtensionDecl(attributes: nil, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword(leadingTrivia: .newlines(2), trailingTrivia: .spaces(1)), extendedType: structure, inheritanceClause: nil, genericWhereClause: nil, members: membersDeclSyntax)
             
-            let newItem = SyntaxFactory.makeCodeBlockItem(item: extensionDeclSyntax, semicolon: nil, errorTokens: nil)
+            let newItem = SyntaxFactory.makeCodeBlockItem(item: .init(extensionDeclSyntax), semicolon: nil, errorTokens: nil)
             items.append(newItem)
         }
         
         if items.isEmpty {
-            return SyntaxFactory.makeBlankSourceFile()
+            return .init(SyntaxFactory.makeBlankSourceFile())
         }
                 
-        return SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(items), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
+        return .init(SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(items), eofToken: SyntaxFactory.makeToken(.eof, presence: .present)))
     }
 }

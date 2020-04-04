@@ -33,7 +33,7 @@ public class ErrorProtocolAdoptionGenerator: SyntaxRewriter {
         [self.match(declaration, predicate: predicate)].compactMap{$0} + declaration.declarations.flatMap{self.search($0, predicate: predicate)}
     }
 
-    func search(_ syntax: DeclSyntax) -> [DeclarationNotation] {
+    func search(_ syntax: DeclSyntaxProtocol) -> [DeclarationNotation] {
         guard let declaration = scanner.scan(syntax) else {
             return []
         }
@@ -42,7 +42,7 @@ public class ErrorProtocolAdoptionGenerator: SyntaxRewriter {
     }
         
     override public func visit(_ node: SourceFileSyntax) -> Syntax {
-        self.generate(node)
+        .init(self.generate(node))
     }
 }
 
@@ -63,11 +63,12 @@ extension ErrorProtocolAdoptionGenerator: Generator {
     }
     public func generate(_ node: SourceFileSyntax) -> Syntax {
         
-        let items = node.statements.compactMap{$0.item as? DeclSyntax}.compactMap(self.search).flatMap{$0}
+        let items = node.statements.compactMap{$0.item as? DeclSyntaxProtocol}.compactMap(self.search).flatMap{$0}
         let declarations = items.map(self.generate)
         
-        let statements = declarations.compactMap(CodeBlockItemSyntax.init{_ in}.withItem)
-        
-        return SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(statements), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))        
+        let statements = declarations.map(Syntax.init).compactMap(CodeBlockItemSyntax.init)
+
+        let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(statements), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
+        return .init(result)
     }
 }
