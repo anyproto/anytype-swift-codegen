@@ -70,9 +70,8 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
 
 
             extension Response {
-                init(internalError: Error?, error: Error) {
+                init(internalError: Error?) {
                     self.internalError = internalError
-                    self.error = error
                 }
             }
             """

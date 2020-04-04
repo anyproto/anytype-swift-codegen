@@ -82,17 +82,18 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
                 }
                 b.useRightParen(SyntaxFactory.makeRightParenToken(leadingTrivia: [.spaces(0)], trailingTrivia: [.spaces(0)]))
             }
-                                    
-            let statements = variablesNamesAndTypes.map{$0.0}.compactMap {
-                CodeBlockItemSyntax(.init(SyntaxFactory.makeCodeBlockItemList([
+                                                
+            let statements: [CodeBlockItemSyntax] = variablesNamesAndTypes.map{$0.0}.compactMap {
+                let list: [CodeBlockItemSyntax] = [
                     CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeSelfKeyword())),
                     CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makePeriodToken())),
                     CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeIdentifier($0))),
                     CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeAssignmentExpr(assignToken: SyntaxFactory.makeToken(.equal, presence: .present)).withLeadingTrivia([.spaces(1)]).withTrailingTrivia([.spaces(1)]))),
                     CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeIdentifier($0))),
-                ])))
+                ]
+                let codeBlockItemList = SyntaxFactory.makeCodeBlockItemList(list)
+                return .init { (b) in b.useItem(.init(codeBlockItemList)) }
             }
-            
             
             let singleLeadingTrivia: Trivia = [.spaces(4)] //[.tabs(1)]
             let doubleLeadingTrivia: Trivia = [.spaces(8)] //[.tabs(2)]
