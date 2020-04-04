@@ -19,15 +19,15 @@ class TemplateGenerator: SyntaxRewriter {
     
     func generate(_ filePath: String) -> Syntax? {
         guard FileManager.default.fileExists(atPath: filePath) else { return nil }
-        return try? SyntaxParser.parse(URL(fileURLWithPath: filePath))
+        return try? .init(SyntaxParser.parse(URL(fileURLWithPath: filePath)))
     }
 }
 
 extension TemplateGenerator: Generator {
     func generate(_ node: SourceFileSyntax) -> Syntax {
         guard let syntax = self.generate(self.options.filePath) else {
-            return SyntaxFactory.makeBlankSourceFile()
+            return .init(SyntaxFactory.makeBlankSourceFile())
         }
-        return syntax
+        return .init(syntax)
     }
 }

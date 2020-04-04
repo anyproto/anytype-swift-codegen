@@ -64,7 +64,7 @@ class StoredPropertiesExtractor: SyntaxRewriter {
             let setters = modifier.accessors.enumerated().map {$0.element}.filter { .contextualKeyword("set") == $0.accessorKind.tokenKind }.first
             return self.setters(setter: setters, variable: variable)
         }
-        private func accessor(accessor: Syntax?, variable: Variable) -> Variable.Accessor {
+        private func accessor(accessor: SyntaxProtocol?, variable: Variable) -> Variable.Accessor {
             guard let accessor = accessor else { return .none }
             switch accessor {
             case is CodeBlockSyntax: return .getter
@@ -92,7 +92,7 @@ class StoredPropertiesExtractor: SyntaxRewriter {
     // MARK: Extraction
     func extract(_ node: StructDeclSyntax) -> [String: (TypeSyntax, [VariableFilter.Variable])] {
         let syntax = node
-        let variables = syntax.members.members.enumerated().compactMap{ $0.element.decl as? VariableDeclSyntax }.map(self.filter.variable).filter{
+        let variables = syntax.members.members.enumerated().compactMap{ $0.element.decl.as(VariableDeclSyntax.self) }.map(self.filter.variable).filter{
             !($0.isEmpty() || $0.computed() || $0.unknownType())
         }
         

@@ -32,7 +32,7 @@ class NestedTypesScanner: SyntaxRewriter {
             return leading + "\(identifier)->\n" + declarations.compactMap{$0.output(level + 1)}.joined(separator: "\n") + trailing
         }
         var declaration: DeclarationType = .unknown
-        var syntax: DeclSyntax = SyntaxFactory.makeBlankUnknownDecl()
+        var syntax: DeclSyntaxProtocol = SyntaxFactory.makeBlankUnknownDecl()
         var declarations: [DeclarationNotation] = []
         var identifier: String {
             switch self.syntax {
@@ -52,23 +52,29 @@ class NestedTypesScanner: SyntaxRewriter {
             default: return ""
             }
         }
+        mutating func configured(declarations: [DeclarationNotation]) -> Self {
+            self.declarations = declarations
+            return self
+        }
     }
     var options: Options = .init()
     init(options: Options) {
         self.options = options
     }
     override init() {}
-    func scanEntry(_ declaration: DeclSyntax) -> DeclarationNotation? {
+    func declarationType(for declaration: DeclSyntaxProtocol) -> DeclarationType? {
         switch declaration {
-        case let value as StructDeclSyntax:
-            return .init(declaration: .structure, syntax: value, declarations: [])
-        case let value as EnumDeclSyntax:
-            return .init(declaration: .enumeration, syntax: value, declarations: [])
+        case is StructDeclSyntax: return .structure
+        case is EnumDeclSyntax: return .enumeration
         default: return nil
         }
     }
     
-    func scanRecursively(_ declaration: DeclSyntax) -> DeclarationNotation? {
+    func scanEntry(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
+        declarationType(for: declaration).flatMap({.init(declaration: $0, syntax: declaration, declarations: [])})
+    }
+    
+    func scanRecursively(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
         switch declaration {
         case let value as StructDeclSyntax:
             return .init(declaration: .structure, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(self.scanRecursively))
@@ -78,20 +84,17 @@ class NestedTypesScanner: SyntaxRewriter {
         }
     }
     
-    func scan(_ node: StructDeclSyntax) -> DeclarationNotation? {
-        self.scanRecursively(node)
-    }
-    func scan(_ node: DeclSyntax) -> DeclarationNotation? {
+    func scan(_ node: DeclSyntaxProtocol) -> DeclarationNotation? {
         self.scanRecursively(node)
     }
     
     func scan(_ node: SourceFileSyntax) -> [DeclarationNotation] {
-        node.statements.compactMap{$0.item as? DeclSyntax}.compactMap(self.scan)
+        node.statements.compactMap{$0.item as? DeclSyntaxProtocol}.compactMap(self.scan)
     }
     
     // MARK: Visits
     override func visit(_ node: SourceFileSyntax) -> Syntax {
         _ = self.scan(node)
-        return node
+        return .init(node)
     }
 }
