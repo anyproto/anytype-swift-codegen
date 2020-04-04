@@ -25,7 +25,6 @@ class NestedTypesScanner: SyntaxRewriter {
             output(0)
         }
         func output(_ level: Int) -> String {
-//            "\(name)"
             let leading = String(repeating: "\t", count: level)
             let trailing = String(repeating: "\t", count: level)
             
@@ -49,7 +48,8 @@ class NestedTypesScanner: SyntaxRewriter {
                 return value.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
             case let value as EnumDeclSyntax:
                 return value.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
-            default: return ""
+            default:
+                return ""
             }
         }
         mutating func configured(declarations: [DeclarationNotation]) -> Self {
@@ -78,9 +78,21 @@ class NestedTypesScanner: SyntaxRewriter {
         switch declaration {
         case let value as StructDeclSyntax:
             return .init(declaration: .structure, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(self.scanRecursively))
+            
         case let value as EnumDeclSyntax:
             return .init(declaration: .enumeration, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(self.scanRecursively))
-        default: return nil
+            
+        case let value as DeclSyntax:
+            if let newValue = StructDeclSyntax(.init(value)) {
+                return self.scanRecursively(newValue)
+            }
+            else if let newValue = EnumDeclSyntax(.init(value)) {
+                return self.scanRecursively(newValue)
+            }
+            return nil
+            
+        default:
+            return nil
         }
     }
     
@@ -89,7 +101,7 @@ class NestedTypesScanner: SyntaxRewriter {
     }
     
     func scan(_ node: SourceFileSyntax) -> [DeclarationNotation] {
-        node.statements.compactMap{$0.item as? DeclSyntaxProtocol}.compactMap(self.scan)
+        node.statements.compactMap{$0.item.asProtocol(DeclSyntaxProtocol.self)}.compactMap(self.scan)
     }
     
     // MARK: Visits
