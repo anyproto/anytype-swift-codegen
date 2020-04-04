@@ -28,6 +28,6 @@ extension TemplateGenerator: Generator {
         guard let syntax = self.generate(self.options.filePath) else {
             return .init(SyntaxFactory.makeBlankSourceFile())
         }
-        return .init(syntax)
+        return syntax
     }
 }

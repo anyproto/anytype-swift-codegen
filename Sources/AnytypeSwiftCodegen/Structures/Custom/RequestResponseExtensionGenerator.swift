@@ -116,7 +116,7 @@ extension RequestResponseExtensionGenerator: Generator {
             return [result].compactMap{$0}
         case .template:
             if let result = options.templatePaths.first.flatMap(self.templateGenerator.generate).flatMap(SourceFileSyntax.init) {
-                return result.statements.map(Syntax.init).compactMap(DeclSyntax.init)
+                return result.statements.compactMap{$0.item.asProtocol(DeclSyntaxProtocol.self)?._syntaxNode}.compactMap(DeclSyntax.init)
             }
             return []
         }
