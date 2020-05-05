@@ -15,6 +15,13 @@ class StoredPropertiesExtractor: SyntaxRewriter {
     }
     class VariableFilter {
         struct Variable {
+            internal init(nameSyntax: PatternSyntax? = nil, typeAnnotationSyntax: TypeAnnotationSyntax? = nil, accessor: Accessor = .none, accessLevel: TokenKind? = nil) {
+                self.nameSyntax = nameSyntax
+                self.typeAnnotationSyntax = typeAnnotationSyntax
+                self.accessor = accessor
+                self.accessLevel = accessLevel ?? .internalKeyword
+            }
+            
             static let zero = Variable()
             func isEmpty() -> Bool { nameSyntax == nil }
             enum Accessor: CustomStringConvertible {
@@ -40,6 +47,18 @@ class StoredPropertiesExtractor: SyntaxRewriter {
             func computed() -> Bool { accessor.computed() }
             func unknownType() -> Bool { typeAnnotationSyntax == nil }
             
+            var accessLevel: TokenKind = .internalKeyword
+            func inaccessibleDueToAccessLevel() -> Bool {
+                switch accessLevel {
+                case .privateKeyword, .fileprivateKeyword: return true
+                case .internalKeyword, .publicKeyword: return false
+                default: return false
+                }
+            }
+            
+            static func accessLevels() -> [TokenKind] {
+                [.privateKeyword, .fileprivateKeyword, .internalKeyword, .publicKeyword]
+            }
         }
         
         private let setterVariableGroupName: String = "setterVariable"
@@ -78,7 +97,10 @@ class StoredPropertiesExtractor: SyntaxRewriter {
         }
         func variable(_ variable: VariableDeclSyntax) -> Variable {
             for binding in variable.bindings {
-                var variable = Variable(nameSyntax: binding.pattern, typeAnnotationSyntax: binding.typeAnnotation)
+                
+                let accessLevel: TokenKind? = variable.modifiers?.compactMap({$0}).map(\.name).map(\.tokenKind).filter(Variable.accessLevels().contains).first
+                                
+                var variable: Variable = .init(nameSyntax: binding.pattern, typeAnnotationSyntax: binding.typeAnnotation, accessLevel: accessLevel)
                 variable.accessor = self.accessor(accessor: binding.accessor, variable: variable)
                 return variable
             }
@@ -96,9 +118,9 @@ class StoredPropertiesExtractor: SyntaxRewriter {
     // MARK: Extraction
     func extract(_ node: StructDeclSyntax) -> [String: (TypeSyntax, [VariableFilter.Variable])] {
         let syntax = node
-        let variables = syntax.members.members.enumerated().compactMap{ $0.element.decl.as(VariableDeclSyntax.self) }.map(self.filter.variable).filter{
-            !($0.isEmpty() || $0.computed() || $0.unknownType())
-        }
+        let variables = syntax.members.members.enumerated().compactMap{ $0.element.decl.as(VariableDeclSyntax.self) }.map(self.filter.variable).filter({
+            !($0.isEmpty() || $0.computed() || $0.unknownType() || $0.inaccessibleDueToAccessLevel())
+        })
                 
         let identifier = syntax.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
         self.extractedFields[identifier] = (syntax.fullIdentifier, variables)
