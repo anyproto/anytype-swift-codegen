@@ -99,7 +99,7 @@ extension PublicInvocationGenerator: Generator {
             let functionCallArgumentListSyntax = SyntaxFactory.makeTupleExprElementList(functionCallArgumentList)
             
             let result =
-                SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(invocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: functionCallArgumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil)
+                SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(invocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: functionCallArgumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
             return .initializer(.init(result))
             
         case .closureArgument:
@@ -114,7 +114,7 @@ extension PublicInvocationGenerator: Generator {
                 methodFunctionCallArgumentList = [.init {b in b.useExpression(.init(value))}]
             }
                         
-            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(methodInvocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: SyntaxFactory.makeTupleExprElementList(methodFunctionCallArgumentList), rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil)
+            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(methodInvocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: SyntaxFactory.makeTupleExprElementList(methodFunctionCallArgumentList), rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
             return .closureArgument(.init(result))
         
         case .closure:
@@ -128,7 +128,7 @@ extension PublicInvocationGenerator: Generator {
             }
             let argumentListSyntax = SyntaxFactory.makeTupleExprElementList(argumentList)
             
-            let argumentCallSyntax = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(argumentNameExprSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: argumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil)
+            let argumentCallSyntax = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(argumentNameExprSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: argumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
             
             // closure
             let closureParamListSyntax = SyntaxFactory.makeClosureParamList([
@@ -147,7 +147,7 @@ extension PublicInvocationGenerator: Generator {
             let initializerCalleeSyntax = SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(""), declNameArguments: nil)
             
             let initializerMemberAccessSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(initializerCalleeSyntax), dot: SyntaxFactory.makePeriodToken(), name: SyntaxFactory.makeInitKeyword(), declNameArguments: nil)
-            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(initializerMemberAccessSyntax), leftParen: nil, argumentList: SyntaxFactory.makeTupleExprElementList([]), rightParen: nil, trailingClosure: closureCallSyntax)
+            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(initializerMemberAccessSyntax), leftParen: nil, argumentList: SyntaxFactory.makeTupleExprElementList([]), rightParen: nil, trailingClosure: closureCallSyntax, additionalTrailingClosures: nil)
             return .closure(.init(result))
         
         case .function:

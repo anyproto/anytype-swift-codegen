@@ -187,7 +187,6 @@ extension RequestResponseExtensionGenerator: Generator {
         return self.generate(part: .scope(.init(serviceName: self.options.serviceName, scope: scope)), options: self.options)
     }
     public func generate(_ node: SourceFileSyntax) -> Syntax {
-        print("we are here?!")
         let codeBlockItemListSyntax = self.scan(node).compactMap(self.generate).compactMap(CodeBlockItemSyntax.init{_ in}.withItem)        
         let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
         return .init(result)

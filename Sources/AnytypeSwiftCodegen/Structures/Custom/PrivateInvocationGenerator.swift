@@ -67,7 +67,7 @@ class PrivateInvocationGenerator: SyntaxRewriter {
             let calleeSyntax = SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(calleeName), declNameArguments: nil)
             let invocationSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(calleeSyntax), dot: SyntaxFactory.makePeriodToken(), name: SyntaxFactory.makeIdentifier(invocation), declNameArguments: nil)
             
-            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(invocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: argumentList, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil)
+            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(invocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: argumentList, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
             return .invocation(result)
             
         case .function:
