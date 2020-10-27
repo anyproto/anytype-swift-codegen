@@ -244,7 +244,7 @@ extension RequestResponseExtensionGenerator {
         
         class Debug: ScopeMatcher {
             var endpoint: RpcServiceFileParser.ServiceParser.Service.Endpoint = .init(name: "", request: "", response: "")
-            override func bestRpc(for scope: RequestResponseExtensionGenerator.Scope) -> RpcServiceFileParser.ServiceParser.Service.Endpoint? {
+            override func bestRpc(for scope: Scope) -> RpcServiceFileParser.ServiceParser.Service.Endpoint? {
                 endpoint
             }
         }
