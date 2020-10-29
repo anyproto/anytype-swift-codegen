@@ -77,7 +77,7 @@ struct GenerateCommand: CommandProtocol
             throw Error.transformDoesntExist(options.transform)
         }
          
-        if transform == .requestAndResponse {
+        if [.requestAndResponse, .serviceWithRequestAndResponse].contains(transform) {
             guard let serviceFile = try? File(path: options.serviceFilePath) else {
                 throw Error.serviceFileNotExists(options.serviceFilePath)
             }
@@ -145,12 +145,13 @@ extension GenerateCommand {
 
 extension GenerateCommand {
     enum Transform: String, CaseIterable {
-        case errorAdoption, requestAndResponse, memberwiseInitializer
+        case errorAdoption, requestAndResponse, memberwiseInitializer, serviceWithRequestAndResponse
         func transform(options: Options) -> (SourceFileSyntax) -> Syntax {
             switch self {
             case .errorAdoption: return ErrorProtocolAdoptionGenerator().generate
             case .requestAndResponse: return RequestResponseExtensionGenerator().with(templatePaths: [options.templateFilePath]).with(serviceFilePath: options.serviceFilePath).generate
             case .memberwiseInitializer: return MemberwiseConvenientInitializerGenerator().generate
+            case .serviceWithRequestAndResponse: return ServiceWithRequestAndResponseGenerator().with(templatePaths: [options.templateFilePath]).with(serviceFilePath: options.serviceFilePath).generate
             }
         }
         func shortcut() -> String {
@@ -158,6 +159,7 @@ extension GenerateCommand {
             case .errorAdoption: return "e"
             case .requestAndResponse: return "rr"
             case .memberwiseInitializer: return "mwi"
+            case .serviceWithRequestAndResponse: return "swrr"
             }
         }
         func documentation() -> String {
@@ -165,6 +167,7 @@ extension GenerateCommand {
             case .errorAdoption: return "Adopt error protocol to .Error types."
             case .requestAndResponse: return "Add Invocation and Service to Scope IF Scope.Request and Scope.Response types exist."
             case .memberwiseInitializer: return "Add Memberwise initializers in extension."
+            case .serviceWithRequestAndResponse: return "Add Invocation and Service to Scope with Request converter and Request parameters IF Scope.Request and Scope.Response types exist."
             }
         }
         static func create(_ shortcutOrName: String) -> Self? {
