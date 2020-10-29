@@ -19,6 +19,7 @@ class RequestParametersRequestConverterGenerator: SyntaxRewriter {
         var functionArgumentName = "parameters"
         var functionArgumentType = "RequestParameters"
         var resultType = "Request"
+        var simple: Bool = false
     }
     static func convert(_ variables: [StoredPropertiesExtractor.VariableFilter.Variable]) -> [(String, String)] {
         variables.compactMap { entry -> (String, String)? in
@@ -79,6 +80,10 @@ extension RequestParametersRequestConverterGenerator: Generator {
     func generate(_ part: Part, options: Options) -> PartResult {
         switch part {
         case .initializer:
+            if options.simple {
+                let simpleVariable = SyntaxFactory.makeVariableExpr(options.functionArgumentName)
+                return .initializer(.init(simpleVariable))
+            }
             let keywordSyntax = SyntaxFactory.makeInitKeyword()
             let calleeSyntax = SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(""), declNameArguments: nil)
                                     
@@ -105,55 +110,7 @@ extension RequestParametersRequestConverterGenerator: Generator {
             let result =
                 SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(invocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: functionCallArgumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
             return .initializer(.init(result))
-            
-//        case .closureArgument:
-//            let methodName = options.invocationMethodName
-//            let methodNameSyntax = SyntaxFactory.makeIdentifier(methodName)
-//            let selfSyntax = SyntaxFactory.makeSelfKeyword()
-//            let selfCalleeSyntax = SyntaxFactory.makeIdentifierExpr(identifier: selfSyntax, declNameArguments: nil)
-//            let methodInvocationSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(selfCalleeSyntax), dot: SyntaxFactory.makePeriodToken(), name: methodNameSyntax, declNameArguments: nil)
-//
-//            var methodFunctionCallArgumentList: [TupleExprElementSyntax] = []
-//            if case let .initializer(value) = self.generate(.initializer, options: options) {
-//                methodFunctionCallArgumentList = [.init {b in b.useExpression(.init(value))}]
-//            }
-//
-//            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(methodInvocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: SyntaxFactory.makeTupleExprElementList(methodFunctionCallArgumentList), rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
-//            return .closureArgument(.init(result))
-//
-//        case .closure:
-//            let argumentName = options.closureVariableName
-//            let argumentNameSyntax = SyntaxFactory.makeIdentifier(argumentName)
-//            let argumentNameExprSyntax = SyntaxFactory.makeIdentifierExpr(identifier: argumentNameSyntax, declNameArguments: nil)
-//
-//            var argumentList: [TupleExprElementSyntax] = []
-//            if case let .closureArgument(value) = self.generate(.closureArgument, options: options) {
-//                argumentList = [.init {b in b.useExpression(value)}]
-//            }
-//            let argumentListSyntax = SyntaxFactory.makeTupleExprElementList(argumentList)
-//
-//            let argumentCallSyntax = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(argumentNameExprSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: argumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
-//
-//            // closure
-//            let closureParamListSyntax = SyntaxFactory.makeClosureParamList([
-//                .init {b in b.useName(SyntaxFactory.makeIdentifier(argumentName))}
-//            ])
-//
-//            let closureSignatureSyntax = SyntaxFactory.makeClosureSignature(capture: nil, input: .init(closureParamListSyntax), throwsTok: nil, output: nil, inTok: SyntaxFactory.makeInKeyword().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)))
-//
-//            let closureStatementsItemListSyntax = SyntaxFactory.makeCodeBlockItemList([
-//                .init { b in b.useItem(.init(argumentCallSyntax)) }
-//            ])
-//
-//            let closureCallSyntax = SyntaxFactory.makeClosureExpr(leftBrace: SyntaxFactory.makeLeftBraceToken(), signature: closureSignatureSyntax, statements: closureStatementsItemListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken())
-//
-//            // now, initializer
-//            let initializerCalleeSyntax = SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(""), declNameArguments: nil)
-//
-//            let initializerMemberAccessSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(initializerCalleeSyntax), dot: SyntaxFactory.makePeriodToken(), name: SyntaxFactory.makeInitKeyword(), declNameArguments: nil)
-//            let result = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(initializerMemberAccessSyntax), leftParen: nil, argumentList: SyntaxFactory.makeTupleExprElementList([]), rightParen: nil, trailingClosure: closureCallSyntax, additionalTrailingClosures: nil)
-//            return .closure(.init(result))
-        
+                    
         case .function:
             let returnTypeSyntax = SyntaxFactory.makeTypeIdentifier(options.resultType)
             let privateKeyword = SyntaxFactory.makePrivateKeyword()
