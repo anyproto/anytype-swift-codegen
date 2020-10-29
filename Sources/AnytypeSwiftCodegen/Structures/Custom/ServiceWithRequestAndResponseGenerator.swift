@@ -14,6 +14,7 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
         var responseName: String = "Response"
         var serviceFilePath: String = ""
         var bestMatchThreshold: Int = 8 // size of scope name + 1.
+        var simple: Bool = true
     }
     
     var options: Options = .init()
@@ -68,8 +69,9 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
     var nestedTypesScanner: NestedTypesScanner = .init()
     // TODO: Make later service generator separately.
     var templateGenerator: TemplateGenerator = .init()
-    var requestParametersTypealiasGenerator: RequestParametersTypealiasGenerator = .init()
-    var requestParametersRequestConverterGenerator: RequestParametersRequestConverterGenerator = .init()
+    lazy var requestParametersTypealiasGenerator: RequestParametersTypealiasGenerator = {RequestParametersTypealiasGenerator.init(options: .init(simple: self.options.simple))}()
+    lazy var requestParametersRequestConverterGenerator: RequestParametersRequestConverterGenerator = {RequestParametersRequestConverterGenerator.init(options: .init(simple: self.options.simple))}()
+    var publicInvocationWithQueue: PublicInvocationWithQueueGenerator = .init()
     var storedPropertiesExtractor: StoredPropertiesExtractor = .init()
     var scopeMatcher: ScopeMatcher = .init()
     
@@ -115,7 +117,8 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let variables = properties?[structIdentifier]?.1
             let typealiasDeclaration = variables.flatMap({self.requestParametersTypealiasGenerator.with(variables: $0)}).map({$0.generate(.typealias)}).flatMap(DeclSyntax.init).flatMap({$0.withTrailingTrivia(.newlines(1))})
             let converterDeclaration = variables.flatMap({self.requestParametersRequestConverterGenerator.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
-            let result = [typealiasDeclaration, converterDeclaration].compactMap({$0})
+            let publicInvocationWithQueueDeclaration = variables.flatMap({self.publicInvocationWithQueue.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
+            let result = [typealiasDeclaration, converterDeclaration, publicInvocationWithQueueDeclaration].compactMap({$0})
             return result
         case .template:
             if let result = options.templatePaths.first.flatMap(self.templateGenerator.generate).flatMap(SourceFileSyntax.init) {
