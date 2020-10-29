@@ -15,6 +15,8 @@ import SwiftSyntax
 class RequestParametersTypealiasGenerator: SyntaxRewriter {
     struct Options {
         var typealiasName = "RequestParameters"
+        var simple: Bool = false
+        var simpleAliasName = "Request"
     }
     static func convert(_ variables: [StoredPropertiesExtractor.VariableFilter.Variable]) -> [(String, String)] {
         variables.compactMap { entry -> (String, String)? in
@@ -91,8 +93,16 @@ extension RequestParametersTypealiasGenerator: Generator {
             let typealiasIdentifierName = SyntaxFactory.makeIdentifier(self.options.typealiasName)
             let equalIdentifier = SyntaxFactory.makeEqualToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1))
             
-            let typeInitializerClauseSyntax = SyntaxFactory.makeTypeInitializerClause(equal: equalIdentifier, value: .init(tupleTypeSyntax))
+            let typeInitializerSyntaxResult: TypeSyntax
+            if options.simple {
+                typeInitializerSyntaxResult = SyntaxFactory.makeTypeIdentifier(options.simpleAliasName)
+            }
+            else {
+                typeInitializerSyntaxResult = .init(tupleTypeSyntax)
+            }
             
+            let typeInitializerClauseSyntax = SyntaxFactory.makeTypeInitializerClause(equal: equalIdentifier, value: typeInitializerSyntaxResult)
+                                    
             let typealiasSyntax = SyntaxFactory.makeTypealiasDecl(attributes: attributesListSyntax, modifiers: nil, typealiasKeyword: typealiasKeyword, identifier: typealiasIdentifierName, genericParameterClause: nil, initializer: typeInitializerClauseSyntax, genericWhereClause: nil)
             return .typealias(.init(typealiasSyntax))
         }
