@@ -18,7 +18,7 @@ import SwiftSyntax
 class PrivateInvocationGenerator: SyntaxRewriter {
     struct Options {
         var callee: String = "Lib" // Lib.methodName
-        var prefix: String = "Lib" // callee.<Lib>methodName
+        var prefix: String = "Service" // callee.<Lib>methodName
         var className: String = "Abc.Def" // Lib.LibAbcDef
         var suffix: String = ""
         var name: String = "Invocation"
