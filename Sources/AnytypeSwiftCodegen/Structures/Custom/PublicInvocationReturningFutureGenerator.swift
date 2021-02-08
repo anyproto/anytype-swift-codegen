@@ -1,5 +1,5 @@
 //
-//  PublicInvocationGenerator.swift
+//  PublicInvocationReturningFutureGenerator.swift
 //  
 //
 //  Created by Dmitry Lobanov on 23.01.2020.
@@ -15,7 +15,7 @@ import SwiftSyntax
  }
  */
 
-class PublicInvocationGenerator: SyntaxRewriter {
+class PublicInvocationReturningFutureGenerator: SyntaxRewriter {
     struct Options {
         var invocationMethodName = "result"
         var functionName = "invoke"
@@ -75,7 +75,7 @@ class PublicInvocationGenerator: SyntaxRewriter {
     }
 }
 
-extension PublicInvocationGenerator: Generator {
+extension PublicInvocationReturningFutureGenerator: Generator {
     func generate(_ part: Part, options: Options) -> PartResult {
         switch part {
         case .initializer:

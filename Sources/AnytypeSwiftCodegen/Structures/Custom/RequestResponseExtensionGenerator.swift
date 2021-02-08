@@ -68,7 +68,7 @@ public class RequestResponseExtensionGenerator: SyntaxRewriter {
     var nestedTypesScanner: NestedTypesScanner = .init()
     // TODO: Make later service generator separately.
     var templateGenerator: TemplateGenerator = .init()
-    var publicInvocationGenerator: PublicInvocationGenerator = .init()
+    var publicInvocationGenerator: PublicInvocationReturningFutureGenerator = .init()
     var storedPropertiesExtractor: StoredPropertiesExtractor = .init()
     var scopeMatcher: ScopeMatcher = .init()
     

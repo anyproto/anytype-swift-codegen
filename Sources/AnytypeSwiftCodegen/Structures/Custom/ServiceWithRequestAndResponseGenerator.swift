@@ -71,7 +71,7 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
     var templateGenerator: TemplateGenerator = .init()
     lazy var requestParametersTypealiasGenerator: RequestParametersTypealiasGenerator = {RequestParametersTypealiasGenerator.init(options: .init(simple: self.options.simple))}()
     lazy var requestParametersRequestConverterGenerator: RequestParametersRequestConverterGenerator = {RequestParametersRequestConverterGenerator.init(options: .init(simple: self.options.simple))}()
-    var publicInvocationWithQueue: PublicInvocationWithQueueGenerator = .init()
+    var publicInvocationWithQueue: PublicInvocationOnQueueReturningFutureGenerator = .init()
     var storedPropertiesExtractor: StoredPropertiesExtractor = .init()
     var scopeMatcher: ScopeMatcher = .init()
     

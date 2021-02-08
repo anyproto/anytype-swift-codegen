@@ -1,5 +1,5 @@
 //
-//  PublicInvocationWithQueueGenerator.swift
+//  PublicInvocationOnQueueReturningFutureGenerator.swift
 //  
 //
 //  Created by Dmitry Lobanov on 29.10.2020.
@@ -13,7 +13,7 @@ import SwiftSyntax
  }
  */
 
-class PublicInvocationWithQueueGenerator: SyntaxRewriter {
+class PublicInvocationOnQueueReturningFutureGenerator: SyntaxRewriter {
     struct Options {
         var invocationMethodName = "invoke"
         var functionName = "invoke"
@@ -73,7 +73,7 @@ class PublicInvocationWithQueueGenerator: SyntaxRewriter {
     }
 }
 
-extension PublicInvocationWithQueueGenerator: Generator {
+extension PublicInvocationOnQueueReturningFutureGenerator: Generator {
     func generate(_ part: Part, options: Options) -> PartResult {
         switch part {
         case .initializer:

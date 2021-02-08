@@ -1,5 +1,5 @@
 //
-//  PublicInvocationWithQueueGeneratorTests.swift
+//  PublicInvocationOnQueueReturningFutureGeneratorTests.swift
 //  
 //
 //  Created by Dmitry Lobanov on 29.10.2020.
@@ -10,7 +10,7 @@ import XCTest
 //public static func invoke(id: String, size: Anytype_Model_Image.Size, queue: DispatchQueue? = nil) -> Future<Response, Error> {
 //   self.invoke(parameters: .init(id: id, size: size), on: queue)
 //}
-final class PublicInvocationWithQueueGeneratorTests: XCTestCase
+final class PublicInvocationOnQueueReturningFutureGeneratorTests: XCTestCase
 {
     func test_basic() throws
     {
@@ -33,7 +33,7 @@ final class PublicInvocationWithQueueGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: PublicInvocationWithQueueGenerator().with(propertiesList: propertiesList)
+            using: PublicInvocationOnQueueReturningFutureGenerator().with(propertiesList: propertiesList)
         )
     }
 }
