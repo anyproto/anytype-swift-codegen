@@ -72,6 +72,7 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
     lazy var requestParametersTypealiasGenerator: RequestParametersTypealiasGenerator = {RequestParametersTypealiasGenerator.init(options: .init(simple: self.options.simple))}()
     lazy var requestParametersRequestConverterGenerator: RequestParametersRequestConverterGenerator = {RequestParametersRequestConverterGenerator.init(options: .init(simple: self.options.simple))}()
     var publicInvocationWithQueue: PublicInvocationOnQueueReturningFutureGenerator = .init()
+    var publicInvocationReturingResult: PublicInvocationReturningResultGenerator = .init()
     var storedPropertiesExtractor: StoredPropertiesExtractor = .init()
     var scopeMatcher: ScopeMatcher = .init()
     
@@ -118,7 +119,8 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let typealiasDeclaration = variables.flatMap({self.requestParametersTypealiasGenerator.with(variables: $0)}).map({$0.generate(.typealias)}).flatMap(DeclSyntax.init).flatMap({$0.withTrailingTrivia(.newlines(1))})
             let converterDeclaration = variables.flatMap({self.requestParametersRequestConverterGenerator.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
             let publicInvocationWithQueueDeclaration = variables.flatMap({self.publicInvocationWithQueue.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
-            let result = [typealiasDeclaration, converterDeclaration, publicInvocationWithQueueDeclaration].compactMap({$0})
+            let publicInvocationReturningResultDeclaration = variables.flatMap({self.publicInvocationReturingResult.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
+            let result = [typealiasDeclaration, converterDeclaration, publicInvocationWithQueueDeclaration, publicInvocationReturningResultDeclaration].compactMap({$0})
             return result
         case .template:
             if let result = options.templatePaths.first.flatMap(self.templateGenerator.generate).flatMap(SourceFileSyntax.init) {
