@@ -68,18 +68,18 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
 
         let expected = """
 
-
-            extension Response {
+            public extension Response {
                 init(internalError: Error?) {
                     self.internalError = internalError
                 }
             }
+
             """
 
         try runTest(
             source: source,
             expected: expected,
-            using: MemberwiseConvenientInitializerGenerator()
+            using: MemberwiseConvenientInitializerGenerator().with(scope: .publicScope)
         )
     }
 
@@ -96,24 +96,24 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
 
         let expected = """
 
-
-            extension Foo {
+            internal extension Foo {
                 init(int: Int) {
                     self.int = int
                 }
             }
 
-            extension Foo.Bar {
+            internal extension Foo.Bar {
                 init(bool: Bool) {
                     self.bool = bool
                 }
             }
+
             """
 
         try runTest(
             source: source,
             expected: expected,
-            using: MemberwiseConvenientInitializerGenerator()
+            using: MemberwiseConvenientInitializerGenerator().with(scope: .internalScope)
         )
     }
 }

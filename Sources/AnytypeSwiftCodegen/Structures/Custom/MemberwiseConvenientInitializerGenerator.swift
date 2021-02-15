@@ -12,20 +12,34 @@ import SwiftSyntax
 // 2. Create extension.
 // 3. Add initializer with extension.
 public class MemberwiseConvenientInitializerGenerator: SyntaxRewriter {
-    public var options: Options = .init()
+    public private(set) var options: Options = .init()
     open override func visit(_ syntax: SourceFileSyntax) -> Syntax {
         .init(self.generate(syntax))
     }
 }
 
 public extension MemberwiseConvenientInitializerGenerator {
-    class Options {
+    struct Options {
         var structuresNames: [String] = [] // will contain Request/Response.
         var fieldsNames: [String] = [] // will contain unknownFields.
         var shouldSkipComputedVariables: Bool = true
         var shouldSkipUnknownTypeVariables: Bool = true
         func hasStructuresNames() -> Bool { !structuresNames.isEmpty }
         func hasFieldsNames() -> Bool { !fieldsNames.isEmpty }
+        var scopeOfInitializer: AccessLevelScope = .publicScope
+        var scopeOfExtension: AccessLevelScope = .publicScope
+    }
+}
+
+public extension MemberwiseConvenientInitializerGenerator {
+    func with(options: Options) -> Self {
+        self.options = options
+        return self
+    }
+    func with(scope: AccessLevelScope) -> Self {
+        self.options.scopeOfExtension = scope
+        self.options.scopeOfInitializer = scope
+        return self
     }
 }
 
@@ -104,12 +118,17 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
                 }
                 b.useRightBrace(SyntaxFactory.makeRightBraceToken().withTrailingTrivia([.newlines(1)]).withLeadingTrivia(singleLeadingTrivia))
             }
-                                    
-            let initializer = InitializerDeclSyntax { b in
-                b.useInitKeyword(SyntaxFactory.makeInitKeyword())
-                b.useParameters(parameters.withTrailingTrivia([.spaces(1)]))
-                b.useBody(body)
-            }
+
+            let initializerTokenSyntax: TokenSyntax = SyntaxFactory.makeIdentifier("")//self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
+            
+            let initializerAttributesListSyntax = SyntaxFactory.makeAttributeList([
+                .init(initializerTokenSyntax
+                        .withLeadingTrivia(.newlines(1))
+                        // .withTrailingTrivia(.spaces(1))
+                )
+            ])
+            
+            let initializer = SyntaxFactory.makeInitializerDecl(attributes: initializerAttributesListSyntax, modifiers: nil, initKeyword: SyntaxFactory.makeInitKeyword(), optionalMark: nil, genericParameterClause: nil, parameters: parameters.withTrailingTrivia([.spaces(1)]), throwsOrRethrowsKeyword: nil, genericWhereClause: nil, body: body)
             
             let memberDeclList = SyntaxFactory.makeMemberDeclList([
                 .init{b in b.useDecl(.init(initializer.withLeadingTrivia(singleLeadingTrivia)))}
@@ -117,9 +136,15 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
             
             let membersDeclSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken(leadingTrivia: [.spaces(1)], trailingTrivia: [.newlines(1)]), members: memberDeclList, rightBrace: SyntaxFactory.makeRightBraceToken(leadingTrivia: [.newlines(0)]))
             
-            let extensionDeclSyntax = SyntaxFactory.makeExtensionDecl(attributes: nil, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword(leadingTrivia: .newlines(2), trailingTrivia: .spaces(1)), extendedType: structure, inheritanceClause: nil, genericWhereClause: nil, members: membersDeclSyntax)
+            let extensionTokenSyntax: TokenSyntax = self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
             
-            let newItem = SyntaxFactory.makeCodeBlockItem(item: .init(extensionDeclSyntax), semicolon: nil, errorTokens: nil)
+            let extensionAttributesListSyntax = SyntaxFactory.makeAttributeList([
+                .init(extensionTokenSyntax.withTrailingTrivia(.spaces(1)))
+            ])
+            
+            let extensionDeclSyntax = SyntaxFactory.makeExtensionDecl(attributes: extensionAttributesListSyntax, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)), extendedType: structure, inheritanceClause: nil, genericWhereClause: nil, members: membersDeclSyntax)
+            
+            let newItem = SyntaxFactory.makeCodeBlockItem(item: .init(extensionDeclSyntax), semicolon: nil, errorTokens: nil).withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1))
             items.append(newItem)
         }
         
