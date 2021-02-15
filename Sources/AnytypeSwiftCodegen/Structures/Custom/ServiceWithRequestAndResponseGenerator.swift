@@ -15,6 +15,8 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
         var serviceFilePath: String = ""
         var bestMatchThreshold: Int = 8 // size of scope name + 1.
         var simple: Bool = true
+        var scopeOfService: AccessLevelScope = .publicScope
+        var scopeOfExtension: AccessLevelScope = .publicScope
     }
     
     var options: Options = .init()
@@ -30,6 +32,11 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
     public func with(serviceFilePath: String) -> Self {
         self.options.serviceFilePath = serviceFilePath
         _ = self.scopeMatcher.with(serviceFilePath).with(self.options.bestMatchThreshold)
+        return self
+    }
+    public func with(scope: AccessLevelScope) -> Self {
+        self.options.scopeOfExtension = scope
+        self.options.scopeOfService = scope
         return self
     }
     // for debug
@@ -142,8 +149,14 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
             
-            let result = SyntaxFactory.makeEnumDecl(attributes: nil, modifiers: nil, enumKeyword: SyntaxFactory.makeEnumKeyword().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.spaces(1)), identifier: serviceNameIdentifier, genericParameters: nil, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
-            return .init(result)
+            let enumTokenSyntax: TokenSyntax = self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
+            
+            let enumAttributesListSyntax = SyntaxFactory.makeAttributeList([
+                .init(enumTokenSyntax.withTrailingTrivia(.spaces(1)))
+            ])
+            
+            let result = SyntaxFactory.makeEnumDecl(attributes: enumAttributesListSyntax, modifiers: nil, enumKeyword: SyntaxFactory.makeEnumKeyword().withTrailingTrivia(.spaces(1)), identifier: serviceNameIdentifier, genericParameters: nil, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
+            return .init(result.withLeadingTrivia(.newlines(1)))
             
         case let .scope(value):
             let scopeName = value.scope.this.fullIdentifier
@@ -180,15 +193,15 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1)))
             
-            let attributesListSyntax = SyntaxFactory.makeAttributeList([
-                // TODO: Make it public when extended type will have access level public.
-                .init(SyntaxFactory.makeInternalKeyword()//.makePublicKeyword()
-                    .withLeadingTrivia(.newlines(1)).withTrailingTrivia(.spaces(1)))
+            let extensionTokenSyntax: TokenSyntax = self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
+            
+            let extensionAttributesListSyntax = SyntaxFactory.makeAttributeList([
+                .init(extensionTokenSyntax.withTrailingTrivia(.spaces(1)))
             ])
             
-            let result = SyntaxFactory.makeExtensionDecl(attributes: attributesListSyntax, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)), extendedType: scopeTypeSyntax, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
+            let result = SyntaxFactory.makeExtensionDecl(attributes: extensionAttributesListSyntax, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)), extendedType: scopeTypeSyntax, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
             // and build extension
-            return .init(result)
+            return .init(result.withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
         }
     }
     func generate(scope: Scope) -> Syntax {
