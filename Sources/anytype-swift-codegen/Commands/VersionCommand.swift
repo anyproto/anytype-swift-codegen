@@ -2,6 +2,7 @@ import Foundation
 import Curry
 import Commandant
 import SwiftSyntax
+import AnytypeSwiftCodegen
 
 /// Print current version.
 struct VersionCommand: CommandProtocol
@@ -13,6 +14,9 @@ struct VersionCommand: CommandProtocol
 
     func run(_ options: Options) throws
     {
-        print("0.0.1")
+        // TODO: Add swift version extraction from SwiftSyntax, I guess.
+        // We should bind this codegen only to SwiftSyntax library.
+        let version = AnytypeSwiftCodegen.ToolVersion
+        print("\(version)")
     }
 }
