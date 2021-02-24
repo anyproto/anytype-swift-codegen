@@ -7,8 +7,9 @@ VERSION_FILE = $(shell find ./ -name 'Version.swift')
 clean:
 	swift package clean
 
-force-clean:
-	rm -rf .build
+artifacts-clean:
+	@rm -rf .build
+	@rm -f ./release/*
 
 build: version
 	@#env DEVELOPER_DIR=$(XCODE) xcrun swift build
@@ -23,6 +24,11 @@ test:
 	xcrun swift test
 
 release: version build-release reset-version
+	echo "Gathering tools in ./release"
+	@cp ./.build/release/anytype-swift-codegen ./release
+	@cp ./.build/release/swift-format ./release
+
+clean-release: clean artifacts-clean release
 
 version:
 	@# avoid tracking changes for file:
