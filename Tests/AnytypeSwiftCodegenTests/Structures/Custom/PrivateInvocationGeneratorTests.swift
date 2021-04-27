@@ -19,7 +19,7 @@ final class PrivateInvocationGeneratorTests: XCTestCase
 
         let expected = """
             private struct Invocation {
-            static func invoke(_ data: Data?) -> Data? { Lib.Lib(data) }
+            static func invoke(_ data: Data?) -> Data? { Lib.Service(data) }
             }
 
             """

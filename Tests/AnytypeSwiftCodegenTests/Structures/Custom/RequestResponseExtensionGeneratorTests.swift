@@ -95,7 +95,7 @@ final class RequestResponseExtensionGeneratorTests: XCTestCase
             
             internal extension Outer.Fruit.Apple {
             private struct Invocation {
-            static func invoke(_ data: Data?) -> Data? { Lib.LibFruitApple(data) }
+            static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitApple(data) }
             }
             
             enum Service {
@@ -108,7 +108,7 @@ final class RequestResponseExtensionGeneratorTests: XCTestCase
             
             internal extension Outer.Fruit.Raspberry {
             private struct Invocation {
-            static func invoke(_ data: Data?) -> Data? { Lib.LibFruitRaspberry(data) }
+            static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitRaspberry(data) }
             }
             
             enum Service {
