@@ -5,7 +5,7 @@ VERSION_FILE = $(shell find ./ -name 'Version.swift')
 # XCODE = /Applications/Xcode_12.2.app
 
 clean:
-	swift package clean
+	xcrun swift package clean
 
 artifacts-clean:
 	@rm -rf .build
@@ -19,11 +19,15 @@ build-release:
 	@#env DEVELOPER_DIR=$(XCODE) xcrun swift build -c release --disable-sandbox
 	xcrun swift build -c release
 
+build-dependency-swift-format:
+	echo "Start build dependent tool swift-format"
+	xcrun swift build --product swift-format -c release
+
 test:
 	@#env DEVELOPER_DIR=$(XCODE) xcrun swift test
 	xcrun swift test
 
-release: version build-release reset-version
+release: version build-release build-dependency-swift-format reset-version
 	echo "Gathering tools in ./release"
 	@cp ./.build/release/anytype-swift-codegen ./release
 	@cp ./.build/release/swift-format ./release
