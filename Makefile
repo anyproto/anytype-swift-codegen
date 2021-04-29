@@ -11,6 +11,8 @@ artifacts-clean:
 	@rm -rf .build
 	@rm -f ./release/*
 
+clean-hard: clean artifacts-clean
+
 build: version
 	@#env DEVELOPER_DIR=$(XCODE) xcrun swift build
 	xcrun swift build
