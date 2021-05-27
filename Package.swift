@@ -13,7 +13,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(name: "SwiftSyntax", url: "https://github.com/apple/swift-syntax.git", ._branchItem("release/5.4")),//.exact("0.50100.0")
-        .package(url: "https://github.com/apple/swift-format.git", ._branchItem("swift-5.4-branch")),
+        .package(url: "https://github.com/apple/swift-format.git", from: "0.50400.0"),
 //        .package(url: "https://github.com/inamiy/FunOptics", from: "1.0.0"),
         .package(url: "https://github.com/Carthage/Commandant.git", from: "0.17.0"),
         .package(url: "https://github.com/thoughtbot/Curry.git", from: "4.0.2"),
