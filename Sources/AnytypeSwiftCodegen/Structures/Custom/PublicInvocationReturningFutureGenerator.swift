@@ -135,7 +135,7 @@ extension PublicInvocationReturningFutureGenerator: Generator {
                 .init {b in b.useName(SyntaxFactory.makeIdentifier(argumentName))}
             ])
             
-            let closureSignatureSyntax = SyntaxFactory.makeClosureSignature(capture: nil, input: .init(closureParamListSyntax), asyncKeyword: nil, throwsTok: nil, output: nil, inTok: SyntaxFactory.makeInKeyword().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)))
+            let closureSignatureSyntax = SyntaxFactory.makeClosureSignature(attributes: nil, capture: nil, input: .init(closureParamListSyntax), asyncKeyword: nil, throwsTok: nil, output: nil, inTok: SyntaxFactory.makeInKeyword().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)))
             
             let closureStatementsItemListSyntax = SyntaxFactory.makeCodeBlockItemList([
                 .init { b in b.useItem(.init(argumentCallSyntax)) }

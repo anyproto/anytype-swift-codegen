@@ -92,7 +92,7 @@ class PrivateInvocationGenerator: SyntaxRewriter {
             ])
             let parameterClauseSyntax = SyntaxFactory.makeParameterClause(leftParen: SyntaxFactory.makeLeftParenToken(), parameterList: functionParameterListSyntax, rightParen: SyntaxFactory.makeRightParenToken())
             let returnClauseSyntax = SyntaxFactory.makeReturnClause(arrow: SyntaxFactory.makeArrowToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)), returnType: SyntaxFactory.makeTypeIdentifier(functionReturnType))
-            let functionSignatureSyntax = SyntaxFactory.makeFunctionSignature(input: parameterClauseSyntax, asyncKeyword: nil, throwsOrRethrowsKeyword: nil, output: returnClauseSyntax)
+            let functionSignatureSyntax = SyntaxFactory.makeFunctionSignature(input: parameterClauseSyntax, asyncOrReasyncKeyword: nil, throwsOrRethrowsKeyword: nil, output: returnClauseSyntax)
             
             let attributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(staticKeywordSyntax.withTrailingTrivia(.spaces(1)))
