@@ -79,7 +79,7 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: MemberwiseConvenientInitializerGenerator().with(scope: .publicScope)
+            using: MemberwiseConvenientInitializerGenerator().with(scope: .public)
         )
     }
 
@@ -113,7 +113,7 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: MemberwiseConvenientInitializerGenerator().with(scope: .internalScope)
+            using: MemberwiseConvenientInitializerGenerator().with(scope: .internal)
         )
     }
 }
