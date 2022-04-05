@@ -1,6 +1,41 @@
 import SwiftSyntax
 
 extension ServiceGenerator {
+    typealias DeclarationNotation = NestedTypesScanner.DeclarationNotation
+    
+    struct Scope {
+        var this: DeclarationNotation = .init()
+        var request: DeclarationNotation = .init()
+        var response: DeclarationNotation = .init()
+    }
+    
+    enum Part {
+        struct Options {
+            var serviceName: String = ""
+            var scope: Scope = .init()
+        }
+        case service(Options)
+        case scope(Options)
+    }
+    
+    enum PartResult {
+        case service(Syntax)
+        case scope(Syntax)
+        func raw() -> Syntax {
+            switch self {
+            case let .service(value): return value
+            case let .scope(value): return value
+            }
+        }
+    }
+    
+    enum ServicePart {
+        case publicInvocation(Scope)
+        case template
+    }
+}
+
+extension ServiceGenerator {
     struct Options {
         let serviceName: String = "Service"
         let requestName: String = "Request"
@@ -23,19 +58,18 @@ extension ServiceGenerator {
     }
 }
 
-
 public class ServiceGenerator: SyntaxRewriter {
     
-    let options: Options
-    let scopeMatcher: ScopeMatcher
-    let nestedTypesScanner = NestedTypesScanner()
-    let templateGenerator = TemplateGenerator()
+    private let options: Options
+    private let scopeMatcher: ScopeMatcher
+    private let nestedTypesScanner = NestedTypesScanner()
+    private let templateGenerator = TemplateGenerator()
     
-    let requestParametersTypealiasGenerator = RequestParametersTypealiasGenerator()
-    let requestParametersRequestConverterGenerator = RequestParametersRequestConverterGenerator()
-    let publicInvocationWithQueue = PublicInvocationOnQueueReturningFutureGenerator()
-    let publicInvocationReturingResult = PublicInvocationReturningResultGenerator()
-    let storedPropertiesExtractor = StoredPropertiesExtractor()
+    private let requestParametersTypealiasGenerator = RequestParametersTypealiasGenerator()
+    private let requestParametersRequestConverterGenerator = RequestParametersRequestConverterGenerator()
+    private let publicInvocationWithQueue = PublicInvocationOnQueueReturningFutureGenerator()
+    private let publicInvocationReturingResult = PublicInvocationReturningResultGenerator()
+    private let storedPropertiesExtractor = StoredPropertiesExtractor()
     
     
     public init(
@@ -51,67 +85,48 @@ public class ServiceGenerator: SyntaxRewriter {
         scopeMatcher = ScopeMatcher(threshold: options.bestMatchThreshold, filePath: serviceFilePath)
     }
     
-    typealias DeclarationNotation = NestedTypesScanner.DeclarationNotation
-    struct Scope {
-        var this: DeclarationNotation = .init()
-        var request: DeclarationNotation = .init()
-        var response: DeclarationNotation = .init()
+    override public func visit(_ node: SourceFileSyntax) -> Syntax {
+        generate(node)
     }
     
-    enum Part {
-        struct Options {
-            var serviceName: String = ""
-            var scope: Scope = .init()
-        }
-        case service(Options)
-        case scope(Options)
-    }
-    enum PartResult {
-        case service(Syntax)
-        case scope(Syntax)
-        func raw() -> Syntax {
-            switch self {
-            case let .service(value): return value
-            case let .scope(value): return value
-            }
-        }
-    }
-    
-    enum ServicePart {
-        case publicInvocation(Scope)
-        case template
+    public func generate(_ node: SourceFileSyntax) -> Syntax {
+        let codeBlockItemListSyntax = scan(node)
+            .compactMap(generate)
+            .compactMap(CodeBlockItemSyntax.init{_ in}.withItem)
+        
+        let result = SyntaxFactory.makeSourceFile(
+            statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax),
+            eofToken: SyntaxFactory.makeToken(.eof, presence: .present)
+        )
+        
+        return Syntax(result)
     }
     
     // MARK: Scan
-    func matchNested(_ declaration: DeclarationNotation, identifier: String) -> DeclarationNotation? {
-        return declaration.declarations.first(where: {$0.identifier == identifier})
+    private func matchNested(_ declaration: DeclarationNotation, identifier: String) -> DeclarationNotation? {
+        declaration.declarations.first { $0.identifier == identifier }
     }
     
-    func match(_ declaration: DeclarationNotation) -> Scope? {
-        if let request = self.matchNested(declaration, identifier: self.options.requestName),
-           let response = self.matchNested(declaration, identifier: self.options.requestName) {
-            return .init(this: declaration, request: request, response: response)
+    private func match(_ declaration: DeclarationNotation) -> Scope? {
+        if let request = matchNested(declaration, identifier: options.requestName),
+           let response = matchNested(declaration, identifier: options.requestName) {
+            return Scope(this: declaration, request: request, response: response)
         }
         return nil
     }
     
-    func scan(_ declaration: DeclarationNotation) -> [Scope] {
-        [self.match(declaration)].compactMap{$0} + declaration.declarations.flatMap(self.scan)
+    private func scan(_ declaration: DeclarationNotation) -> [Scope] {
+        [match(declaration)].compactMap{ $0 } + declaration.declarations.flatMap(scan)
     }
     
-    func scan(_ node: SourceFileSyntax) -> [Scope] {
-        let result = self.nestedTypesScanner.scan(node).flatMap(self.scan)
-        return result
-    }
-    
-    // MARK: Visits
-    override public func visit(_ node: SourceFileSyntax) -> Syntax {
-        self.generate(node)
+    private func scan(_ node: SourceFileSyntax) -> [Scope] {
+        nestedTypesScanner.scan(node).flatMap(scan)
     }
 }
 
+// MARK: - Private
 extension ServiceGenerator: Generator {
-    func generate(servicePart: ServicePart, options: Options) -> [DeclSyntax] {
+    private func generate(servicePart: ServicePart, options: Options) -> [DeclSyntax] {
         switch servicePart {
         case let .publicInvocation(scope):
             let structIdentifier = scope.request.fullIdentifier
@@ -130,7 +145,8 @@ extension ServiceGenerator: Generator {
             return []
         }
     }
-    func generate(part: Part, options: Options) -> Syntax {
+    
+    private func generate(part: Part, options: Options) -> Syntax {
         switch part {
         case let .service(value):
             let serviceName = value.serviceName
@@ -189,12 +205,16 @@ extension ServiceGenerator: Generator {
             return .init(result.withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
         }
     }
-    func generate(scope: Scope) -> Syntax {
-        return self.generate(part: .scope(.init(serviceName: self.options.serviceName, scope: scope)), options: self.options)
-    }
-    public func generate(_ node: SourceFileSyntax) -> Syntax {
-        let codeBlockItemListSyntax = self.scan(node).compactMap(self.generate).compactMap(CodeBlockItemSyntax.init{_ in}.withItem)
-        let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
-        return .init(result)
+    
+    private func generate(scope: Scope) -> Syntax {
+        return generate(
+            part: .scope(
+                .init(
+                    serviceName: options.serviceName,
+                    scope: scope
+                )
+            ),
+            options: options
+        )
     }
 }

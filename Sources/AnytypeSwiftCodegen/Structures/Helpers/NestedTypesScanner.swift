@@ -8,7 +8,7 @@ enum DeclarationType: String, CustomStringConvertible {
     var description: String { return self.rawValue }
 }
 
-class NestedTypesScanner: SyntaxRewriter {
+extension NestedTypesScanner {
     struct DeclarationNotation: CustomStringConvertible {
         var description: String {
             output(0)
@@ -46,35 +46,30 @@ class NestedTypesScanner: SyntaxRewriter {
             return self
         }
     }
+}
+
+class NestedTypesScanner: SyntaxRewriter {
     
-    override init() {}
-    
-    func declarationType(for declaration: DeclSyntaxProtocol) -> DeclarationType? {
-        switch declaration {
-        case is StructDeclSyntax: return .structure
-        case is EnumDeclSyntax: return .enumeration
-        default: return nil
-        }
+    func scan(_ node: SourceFileSyntax) -> [DeclarationNotation] {
+        node.statements.compactMap {
+            $0.item.asProtocol(DeclSyntaxProtocol.self)
+        }.compactMap(scan)
     }
     
-    func scanEntry(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
-        declarationType(for: declaration).flatMap({.init(declaration: $0, syntax: declaration, declarations: [])})
-    }
-    
-    func scanRecursively(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
+    func scan(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
         switch declaration {
         case let value as StructDeclSyntax:
-            return .init(declaration: .structure, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(self.scanRecursively))
+            return .init(declaration: .structure, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(scan))
             
         case let value as EnumDeclSyntax:
-            return .init(declaration: .enumeration, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(self.scanRecursively))
+            return .init(declaration: .enumeration, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(scan))
             
         case let value as DeclSyntax:
             if let newValue = StructDeclSyntax(.init(value)) {
-                return self.scanRecursively(newValue)
+                return scan(newValue)
             }
             else if let newValue = EnumDeclSyntax(.init(value)) {
-                return self.scanRecursively(newValue)
+                return scan(newValue)
             }
             return nil
             
@@ -83,17 +78,22 @@ class NestedTypesScanner: SyntaxRewriter {
         }
     }
     
-    func scan(_ node: DeclSyntaxProtocol) -> DeclarationNotation? {
-        self.scanRecursively(node)
-    }
-    
-    func scan(_ node: SourceFileSyntax) -> [DeclarationNotation] {
-        node.statements.compactMap{$0.item.asProtocol(DeclSyntaxProtocol.self)}.compactMap(self.scan)
-    }
-    
     // MARK: Visits
     override func visit(_ node: SourceFileSyntax) -> Syntax {
         _ = self.scan(node)
         return .init(node)
+    }
+    
+    // MARK: - Private
+    private func declarationType(for declaration: DeclSyntaxProtocol) -> DeclarationType? {
+        switch declaration {
+        case is StructDeclSyntax: return .structure
+        case is EnumDeclSyntax: return .enumeration
+        default: return nil
+        }
+    }
+    
+    private func scanEntry(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
+        declarationType(for: declaration).flatMap({.init(declaration: $0, syntax: declaration, declarations: [])})
     }
 }
