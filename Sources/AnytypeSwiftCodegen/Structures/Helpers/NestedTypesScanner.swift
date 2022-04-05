@@ -1,10 +1,3 @@
-//
-//  NestedTypesScanner.swift
-//  
-//
-//  Created by Dmitry Lobanov on 23.01.2020.
-//
-
 import SwiftSyntax
 
 class NestedTypesScanner: SyntaxRewriter {
@@ -14,10 +7,6 @@ class NestedTypesScanner: SyntaxRewriter {
         case unknown
         case enumeration
         case structure
-    }
-    
-    struct Options {
-        var scanEntries: [DeclarationType] = [.unknown]
     }
     
     struct DeclarationNotation: CustomStringConvertible {
@@ -57,11 +46,9 @@ class NestedTypesScanner: SyntaxRewriter {
             return self
         }
     }
-    var options: Options = .init()
-    init(options: Options) {
-        self.options = options
-    }
+    
     override init() {}
+    
     func declarationType(for declaration: DeclSyntaxProtocol) -> DeclarationType? {
         switch declaration {
         case is StructDeclSyntax: return .structure

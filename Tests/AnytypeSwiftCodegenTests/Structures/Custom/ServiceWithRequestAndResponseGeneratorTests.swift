@@ -143,7 +143,7 @@ final class ServiceWithRequestAndResponseGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .publicScope)
+            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .public)
         )
     }
 
@@ -216,7 +216,7 @@ final class ServiceWithRequestAndResponseGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .internalScope)
+            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .internal)
         )
     }
 }

@@ -30,11 +30,11 @@ struct GenerateCommand: CommandProtocol
     }
     
     private func processTransform(source: File, target: File, options: Options) throws {
-        guard source.extension == FileExtensions.swiftExtension.extName() else {
+        guard source.extension == FileExtensions.swiftExtension.extName else {
             throw Error.fileShouldHaveExtension(source.path, .swiftExtension)
         }
         
-        guard target.extension == FileExtensions.swiftExtension.extName() else {
+        guard target.extension == FileExtensions.swiftExtension.extName else {
             throw Error.fileShouldHaveExtension(target.path, .swiftExtension)
         }
         
@@ -46,7 +46,7 @@ struct GenerateCommand: CommandProtocol
             guard let serviceFile = try? File(path: options.serviceFilePath) else {
                 throw Error.serviceFileNotExists(options.serviceFilePath)
             }
-            guard serviceFile.extension == FileExtensions.protobufExtension.extName() else {
+            guard serviceFile.extension == FileExtensions.protobufExtension.extName else {
                 throw Error.fileShouldHaveExtension(serviceFile.path, .protobufExtension)
             }
         }
