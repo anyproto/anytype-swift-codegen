@@ -21,7 +21,7 @@ class RequestParametersRequestConverterGenerator: SyntaxRewriter {
         var resultType = "Request"
         var simple: Bool = false
     }
-    static func convert(_ variables: [StoredPropertiesExtractor.VariableFilter.Variable]) -> [(String, String)] {
+    static func convert(_ variables: [Variable]) -> [(String, String)] {
         variables.compactMap { entry -> (String, String)? in
             guard let type = entry.typeAnnotationSyntax?.type.description.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
             let name = entry.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -29,7 +29,7 @@ class RequestParametersRequestConverterGenerator: SyntaxRewriter {
         }
     }
     
-    func with(variables list: [StoredPropertiesExtractor.VariableFilter.Variable]) -> Self {
+    func with(variables list: [Variable]) -> Self {
         self.storedPropertiesList = Self.convert(list)
         return self
     }
@@ -44,7 +44,7 @@ class RequestParametersRequestConverterGenerator: SyntaxRewriter {
         ("def", "Int")
     ]
     var options: Options = .init()
-    convenience init(options: Options, variables: [StoredPropertiesExtractor.VariableFilter.Variable]) {
+    convenience init(options: Options, variables: [Variable]) {
         self.init(options: options)
         self.storedPropertiesList = Self.convert(variables)
     }

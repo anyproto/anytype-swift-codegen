@@ -1,25 +1,13 @@
-//
-//  ErrorProtocolAdoptionGenerator.swift
-//  
-//
-//  Created by Dmitry Lobanov on 23.01.2020.
-//
-
 import SwiftSyntax
 
 public class ErrorProtocolAdoptionGenerator: SyntaxRewriter {
-    struct Options {
-        var adopteeIdentifier: String = "Error" // The identifier of a declaration that will adopt Swift.Error protocol
-        var adoptedProtocolTypeIdentifier: String = "Swift.Error"
-    }
-    var options: Options = .init()
-    init(options: Options) {
-        self.options = options
-    }
+    let adopteeIdentifier: String = "Error" // The identifier of a declaration that will adopt Swift.Error protocol
+    let adoptedProtocolTypeIdentifier: String = "Swift.Error"
+    
     public override init() {}
     
-    var scanner = NestedTypesScanner()
     typealias DeclarationNotation = NestedTypesScanner.DeclarationNotation
+    var scanner = NestedTypesScanner()
     func match(_ declaration: DeclarationNotation, predicate: String) -> DeclarationNotation? {
         if declaration.identifier == predicate {
             return declaration
@@ -37,7 +25,7 @@ public class ErrorProtocolAdoptionGenerator: SyntaxRewriter {
         guard let declaration = scanner.scan(syntax) else {
             return []
         }
-        let errors = self.search(declaration, predicate: self.options.adopteeIdentifier)
+        let errors = self.search(declaration, predicate: adopteeIdentifier)
         return errors
     }
         
@@ -50,7 +38,7 @@ extension ErrorProtocolAdoptionGenerator: Generator {
     func generate(_ item: DeclarationNotation) -> ExtensionDeclSyntax {
         let extendedType = item.fullIdentifier
         let extendedTypeSyntax = SyntaxFactory.makeTypeIdentifier(extendedType)
-        let inheritanceType = self.options.adoptedProtocolTypeIdentifier
+        let inheritanceType = adoptedProtocolTypeIdentifier
         let inheritanceTypeSyntax = SyntaxFactory.makeTypeIdentifier(inheritanceType)
         let inheritedTypeListSyntax = SyntaxFactory.makeInheritedTypeList([
             .init {b in b.useTypeName(inheritanceTypeSyntax)}

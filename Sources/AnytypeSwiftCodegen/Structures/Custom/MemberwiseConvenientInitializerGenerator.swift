@@ -26,8 +26,8 @@ public extension MemberwiseConvenientInitializerGenerator {
         var shouldSkipUnknownTypeVariables: Bool = true
         func hasStructuresNames() -> Bool { !structuresNames.isEmpty }
         func hasFieldsNames() -> Bool { !fieldsNames.isEmpty }
-        var scopeOfInitializer: AccessLevelScope = .publicScope
-        var scopeOfExtension: AccessLevelScope = .publicScope
+        var scopeOfInitializer = AccessLevelScope.public
+        var scopeOfExtension = AccessLevelScope.public
     }
 }
 
@@ -136,7 +136,7 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
             
             let membersDeclSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken(leadingTrivia: [.spaces(1)], trailingTrivia: [.newlines(1)]), members: memberDeclList, rightBrace: SyntaxFactory.makeRightBraceToken(leadingTrivia: [.newlines(0)]))
             
-            let extensionTokenSyntax: TokenSyntax = self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
+            let extensionTokenSyntax = options.scopeOfExtension.token
             
             let extensionAttributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(extensionTokenSyntax.withTrailingTrivia(.spaces(1)))
