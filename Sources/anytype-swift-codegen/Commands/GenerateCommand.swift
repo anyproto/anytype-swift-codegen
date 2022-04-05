@@ -42,7 +42,7 @@ struct GenerateCommand: CommandProtocol
             throw Error.transformDoesntExist(options.transform)
         }
          
-        if [.requestAndResponse, .serviceWithRequestAndResponse].contains(transform) {
+        if [.serviceWithRequestAndResponse].contains(transform) {
             guard let serviceFile = try? File(path: options.serviceFilePath) else {
                 throw Error.serviceFileNotExists(options.serviceFilePath)
             }
@@ -51,30 +51,13 @@ struct GenerateCommand: CommandProtocol
             }
         }
         
-        let t1 = DispatchTime.now()
-        
         let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: source.path))
-        
-        let t2 = DispatchTime.now()
-        
         let result = transform.transform(options: options)(sourceFile)
-
-        let t3 = DispatchTime.now()
         
         print("Processing source file -> \(source.path) ")
         print("Output to file -> \(target.path)")
-        if options.debug {
-            print("=============== time ===============")
-            print("total time:", t3 - t1)
-            print("  SyntaxParser.parse time:  ", t2 - t1)
-            print("  rewriter.rewrite time:", t3 - t2)
-            print("=============== result ===============")
-            print()
-        }
-        else {
-            let optionalHeader = [options.commentsHeaderFilePath, options.importsFilePath].compactMap{try? File(path: $0).readAsString()}.joined(separator: "\n\n")
-            let output = [optionalHeader, result.description].joined(separator: "\n")
-            try target.write(output)
-        }
+        let optionalHeader = [options.commentsHeaderFilePath, options.importsFilePath].compactMap{try? File(path: $0).readAsString()}.joined(separator: "\n\n")
+        let output = [optionalHeader, result.description].joined(separator: "\n")
+        try target.write(output)
     }
 }
