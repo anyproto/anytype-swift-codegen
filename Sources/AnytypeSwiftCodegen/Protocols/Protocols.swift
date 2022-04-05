@@ -1,10 +1,3 @@
-//
-//  Protocols.swift
-//  
-//
-//  Created by Dmitry Lobanov on 27.01.2020.
-//
-
 import Foundation
 import SwiftSyntax
 
