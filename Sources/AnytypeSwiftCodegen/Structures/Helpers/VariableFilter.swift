@@ -15,29 +15,26 @@ struct Variable {
     }
     
     static let zero = Variable()
-    func isEmpty() -> Bool { nameSyntax == nil }
-    enum Accessor: CustomStringConvertible {
+    
+    enum Accessor {
         case none
         case getter
         case setter
-        func computed() -> Bool {
+        
+        var isGetter: Bool {
             self == .getter
         }
-        var description: String {
-            switch self {
-            case .none: return "none"
-            case .getter: return "getter"
-            case .setter: return "setter"
-            }
-        }
     }
+    
     var name: String { nameSyntax?.description ?? "" }
-    var nameSyntax: PatternSyntax?
+    var isEmpty: Bool { nameSyntax == nil }
     var typeAnnotation: String { typeAnnotationSyntax?.description ?? "" }
-    var typeAnnotationSyntax: TypeAnnotationSyntax?
+    var computed: Bool { accessor.isGetter }
+    var unknownType: Bool { typeAnnotationSyntax == nil }
+    
+    let nameSyntax: PatternSyntax?
+    let typeAnnotationSyntax: TypeAnnotationSyntax?
     var accessor: Accessor = .none
-    func computed() -> Bool { accessor.computed() }
-    func unknownType() -> Bool { typeAnnotationSyntax == nil }
     
     var accessLevel: TokenKind = .internalKeyword
     func inaccessibleDueToAccessLevel() -> Bool {
@@ -54,6 +51,28 @@ struct Variable {
 }
 
 class VariableFilter {
+    func variable(_ variable: VariableDeclSyntax) -> Variable {
+        for binding in variable.bindings {
+            let accessLevel: TokenKind? = variable.modifiers?
+                .compactMap({$0})
+                .map(\.name)
+                .map(\.tokenKind)
+                .filter(Variable.accessLevels().contains)
+                .first
+                            
+            var variable = Variable(
+                nameSyntax: binding.pattern,
+                typeAnnotationSyntax: binding.typeAnnotation,
+                accessLevel: accessLevel
+            )
+            variable.accessor = accessor(accessor: binding.accessor, variable: variable)
+            return variable
+        }
+        return .zero
+    }
+    
+    
+    
     private let setterVariableGroupName: String = "setterVariable"
     private let setterVariablePattern: NSRegularExpression = (try? NSRegularExpression(pattern: "(?<setterVariable>[^=]+)\\s*=")) ?? NSRegularExpression()
     
@@ -87,25 +106,5 @@ class VariableFilter {
         }
         
         return .none
-    }
-    
-    func variable(_ variable: VariableDeclSyntax) -> Variable {
-        for binding in variable.bindings {
-            let accessLevel: TokenKind? = variable.modifiers?
-                .compactMap({$0})
-                .map(\.name)
-                .map(\.tokenKind)
-                .filter(Variable.accessLevels().contains)
-                .first
-                            
-            var variable = Variable(
-                nameSyntax: binding.pattern,
-                typeAnnotationSyntax: binding.typeAnnotation,
-                accessLevel: accessLevel
-            )
-            variable.accessor = accessor(accessor: binding.accessor, variable: variable)
-            return variable
-        }
-        return .zero
     }
 }
