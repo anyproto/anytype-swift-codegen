@@ -1,5 +1,5 @@
 //
-//  MemberwiseConvenientInitializerGeneratorTests.swift
+//  InitializerGeneratorTests.swift
 //  
 //
 //  Created by Dmitry Lobanov on 22.01.2020.
@@ -29,7 +29,7 @@
 import XCTest
 @testable import AnytypeSwiftCodegen
 
-final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
+final class InitializerGeneratorTests: XCTestCase
 {
     func test_empty() throws
     {
@@ -45,7 +45,7 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: MemberwiseConvenientInitializerGenerator()
+            using: InitializerGenerator()
         )
     }
 
@@ -79,7 +79,7 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: MemberwiseConvenientInitializerGenerator().with(scope: .public)
+            using: InitializerGenerator().with(scope: .public)
         )
     }
 
@@ -113,7 +113,7 @@ final class MemberwiseConvenientInitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: MemberwiseConvenientInitializerGenerator().with(scope: .internal)
+            using: InitializerGenerator().with(scope: .internal)
         )
     }
 }

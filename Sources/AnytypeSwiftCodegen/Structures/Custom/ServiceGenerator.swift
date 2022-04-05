@@ -4,8 +4,10 @@ public class ServiceGenerator {
     
     private let responseName: String = "Response"
     
-    private let options: Options
+    private let scope: AccessLevelScope
+    private let templatePaths: [String]
     private let serviceFilePath: String
+    
     private let scopeMatcher = ScopeMatcher(threshold: 8) // size of scope name + 1.
     private let nestedTypesScanner = NestedTypesScanner()
     private let templateGenerator = TemplateGenerator()
@@ -18,7 +20,8 @@ public class ServiceGenerator {
     
     
     public init(scope: AccessLevelScope, templatePaths: [String], serviceFilePath: String) {
-        options = Options(scope: scope, templatePaths: templatePaths)
+        self.scope = scope
+        self.templatePaths = templatePaths
         self.serviceFilePath = serviceFilePath
     }
     
@@ -59,21 +62,46 @@ public class ServiceGenerator {
 
 // MARK: - Private
 extension ServiceGenerator: Generator {
-    private func generatePublicInvocation(scope: ServiceData, options: Options) -> [DeclSyntax] {
+    private func generatePublicInvocation(scope: ServiceData) -> [DeclSyntax] {
         let structIdentifier = scope.request.fullIdentifier
-        let properties = (scope.request.syntax as? StructDeclSyntax).flatMap(self.storedPropertiesExtractor.extract)
+        let properties = (scope.request.syntax as? StructDeclSyntax)
+            .flatMap(storedPropertiesExtractor.extract)
         let variables = properties?[structIdentifier]?.1
-        let typealiasDeclaration = variables.flatMap({self.requestParametersTypealiasGenerator.with(variables: $0)}).map({$0.generate(.typealias)}).flatMap(DeclSyntax.init).flatMap({$0.withTrailingTrivia(.newlines(1))})
-        let converterDeclaration = variables.flatMap({self.requestParametersRequestConverterGenerator.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
-        let publicInvocationWithQueueDeclaration = variables.flatMap({self.publicInvocationWithQueue.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
-        let publicInvocationReturningResultDeclaration = variables.flatMap({self.publicInvocationReturingResult.with(variables: $0)}).map({$0.generate(.function)}).flatMap(DeclSyntax.init)
-        let result = [typealiasDeclaration, converterDeclaration, publicInvocationWithQueueDeclaration, publicInvocationReturningResultDeclaration].compactMap({$0})
+        
+        let typealiasDeclaration = variables
+            .flatMap { requestParametersTypealiasGenerator.with(variables: $0)}
+            .map { $0.generate(.typealias) }
+            .flatMap(DeclSyntax.init)
+            .flatMap { $0.withTrailingTrivia(.newlines(1)) }
+        let converterDeclaration = variables
+            .flatMap { requestParametersRequestConverterGenerator.with(variables: $0) }
+            .map { $0.generate(.function) }
+            .flatMap(DeclSyntax.init)
+        let publicInvocationWithQueueDeclaration = variables
+            .flatMap { publicInvocationWithQueue.with(variables: $0)}
+            .map {$0.generate(.function)}
+            .flatMap(DeclSyntax.init)
+        let publicInvocationReturningResultDeclaration = variables
+            .flatMap {publicInvocationReturingResult.with(variables: $0)}
+            .map {$0.generate(.function)}
+            .flatMap(DeclSyntax.init)
+        
+        let result = [
+            typealiasDeclaration,
+            converterDeclaration,
+            publicInvocationWithQueueDeclaration,
+            publicInvocationReturningResultDeclaration
+        ].compactMap{$0}
         return result
     }
     
-    private func generateTemplate(options: Options) -> [DeclSyntax] {
-        if let result = options.templatePaths.first.flatMap(self.templateGenerator.generate).flatMap(SourceFileSyntax.init) {
-            return result.statements.compactMap{$0.item.asProtocol(DeclSyntaxProtocol.self)?._syntaxNode}.compactMap(DeclSyntax.init)
+    private func generateTemplate() -> [DeclSyntax] {
+        if let result = templatePaths.first
+            .flatMap(templateGenerator.generate)
+            .flatMap(SourceFileSyntax.init) {
+            return result.statements
+                .compactMap{$0.item.asProtocol(DeclSyntaxProtocol.self)?._syntaxNode}
+                .compactMap(DeclSyntax.init)
         }
         return []
     }
@@ -82,8 +110,8 @@ extension ServiceGenerator: Generator {
         let serviceNameIdentifier = SyntaxFactory.makeIdentifier(serviceName)
         
         let memberDeclList: [MemberDeclListItemSyntax] = [
-            generatePublicInvocation(scope: scope, options: options),
-            generateTemplate(options: options)
+            generatePublicInvocation(scope: scope),
+            generateTemplate()
         ]
             .flatMap{$0}
             .compactMap(MemberDeclListItemSyntax({_ in}).withDecl)
@@ -91,23 +119,23 @@ extension ServiceGenerator: Generator {
         let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
         let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
         
-        let enumTokenSyntax = options.scope.token
+        let enumTokenSyntax = self.scope.token
         
         let enumAttributesListSyntax = SyntaxFactory.makeAttributeList([
             .init(enumTokenSyntax.withTrailingTrivia(.spaces(1)))
         ])
         
         let result = SyntaxFactory.makeEnumDecl(attributes: enumAttributesListSyntax, modifiers: nil, enumKeyword: SyntaxFactory.makeEnumKeyword().withTrailingTrivia(.spaces(1)), identifier: serviceNameIdentifier, genericParameters: nil, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
-        return .init(result.withLeadingTrivia(.newlines(1)))
+        return Syntax(result.withLeadingTrivia(.newlines(1)))
     }
             
-    func generate(scope: ServiceData) -> Syntax {
-        let scopeName = scope.this.fullIdentifier
+    private func generate(serviceData: ServiceData) -> Syntax {
+        let scopeName = serviceData.this.fullIdentifier
         let scopeTypeSyntax = SyntaxFactory.makeTypeIdentifier(scopeName)
         // NOTE: scopeName except first scope. Custom behaviour.
         
         guard let endpoints = RpcServiceFileParser().parse(serviceFilePath),
-                let suffix = scopeMatcher.bestRpc(scope: scope, endpoints: endpoints)?.name
+                let suffix = scopeMatcher.bestRpc(scope: serviceData, endpoints: endpoints)?.name
         else {
             return .blank
         }
@@ -117,7 +145,7 @@ extension ServiceGenerator: Generator {
         let invocationSyntax = generator.generate(.structure).raw()
         
         // next, add service
-        let serviceSyntax = generateService(serviceName: "Service", scope: scope)
+        let serviceSyntax = generateService(serviceName: "Service", scope: serviceData)
                     
         // build members
         
@@ -127,14 +155,26 @@ extension ServiceGenerator: Generator {
         let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
         let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1)))
         
-        let extensionTokenSyntax: TokenSyntax = options.scope.token
+        let extensionTokenSyntax: TokenSyntax = self.scope.token
         
         let extensionAttributesListSyntax = SyntaxFactory.makeAttributeList([
             .init(extensionTokenSyntax.withTrailingTrivia(.spaces(1)))
         ])
         
-        let result = SyntaxFactory.makeExtensionDecl(attributes: extensionAttributesListSyntax, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)), extendedType: scopeTypeSyntax, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
-        // and build extension
-        return .init(result.withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
+        let result = SyntaxFactory.makeExtensionDecl(
+            attributes: extensionAttributesListSyntax,
+            modifiers: nil,
+            extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)),
+            extendedType: scopeTypeSyntax,
+            inheritanceClause: nil,
+            genericWhereClause: nil,
+            members: memberDeclBlockSyntax
+        )
+        
+        return Syntax(
+            result
+                .withLeadingTrivia(.newlines(1))
+                .withTrailingTrivia(.newlines(1))
+        )
     }
 }

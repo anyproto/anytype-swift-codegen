@@ -4,14 +4,14 @@ import SwiftSyntax
 // 1. Get structure full name.
 // 2. Create extension.
 // 3. Add initializer with extension.
-public class MemberwiseConvenientInitializerGenerator: SyntaxRewriter {
+public class InitializerGenerator: SyntaxRewriter {
     public private(set) var options: Options = .init()
     open override func visit(_ syntax: SourceFileSyntax) -> Syntax {
         .init(self.generate(syntax))
     }
 }
 
-public extension MemberwiseConvenientInitializerGenerator {
+public extension InitializerGenerator {
     struct Options {
         var structuresNames: [String] = [] // will contain Request/Response.
         var fieldsNames: [String] = [] // will contain unknownFields.
@@ -24,7 +24,7 @@ public extension MemberwiseConvenientInitializerGenerator {
     }
 }
 
-public extension MemberwiseConvenientInitializerGenerator {
+public extension InitializerGenerator {
     func with(options: Options) -> Self {
         self.options = options
         return self
@@ -39,7 +39,7 @@ public extension MemberwiseConvenientInitializerGenerator {
 // NOTE: Necessary fields definition
 // 1. Filtered Fields count > 0
 // 2. Fields has get and setter.
-private extension MemberwiseConvenientInitializerGenerator {
+private extension InitializerGenerator {
     class NecessaryFieldsExtractor: SyntaxRewriter {
         var storedPropertiesExtractor = StoredPropertiesExtractor()
         
@@ -53,7 +53,7 @@ private extension MemberwiseConvenientInitializerGenerator {
 
 // TODO:
 // Rewrite when you can.
-extension MemberwiseConvenientInitializerGenerator: Generator {
+extension InitializerGenerator: Generator {
     public func generate(_ node: SourceFileSyntax) -> Syntax {
         let fieldsExtractor = NecessaryFieldsExtractor()
         _ = fieldsExtractor.visit(node)
