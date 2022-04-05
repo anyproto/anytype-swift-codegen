@@ -1,18 +1,31 @@
 class ScopeMatcher {
-    private let service: ServiceParser.Service?
+    private let endpoints: [Endpoint]
     private let threshold: Int
     
-    init(threshold: Int, filePath: String) {
+    init(threshold: Int, endpoints: [Endpoint]) {
         self.threshold = threshold
-        self.service = RpcServiceFileParser(filePath: filePath).parse(filePath)
+        self.endpoints = endpoints
     }
+    
+    func bestRpc(for scope: ServiceGenerator.Scope) -> Endpoint? {
+        return endpoints.compactMap { (value) in
+            (value, self.sufficiesDifference(lhs: scope.request.fullIdentifier, rhs: value.request))
+        }
+        .compactMap{($0.0, max($0.1.0, $0.1.1))}
+        .sorted { (left, right) -> Bool in
+            left.1 < right.1
+        }
+        .first(where: {$0.1 <= self.threshold})?.0
+    }
+    
+    // MARK: - Private
     
     // Given two strings:
     // A = "abcdef"
     // B = "lkmabcdef"
     // This function return result
     // C = (0, length(lkm))
-    func sufficiesDifference(lhs: String, rhs: String) -> (Int, Int) {
+    private func sufficiesDifference(lhs: String, rhs: String) -> (Int, Int) {
         let left = lhs.reversed()
         let right = rhs.reversed()
         var leftStartIndex = left.startIndex
@@ -28,15 +41,6 @@ class ScopeMatcher {
             left.distance(from: leftStartIndex, to: leftEndIndex),
             right.distance(from: rightStartIndex, to: rightEndIndex)
         )
-    }
-    
-    func bestRpc(for scope: ServiceGenerator.Scope) -> ServiceParser.Service.Endpoint? {
-        guard let service = service else { return nil }
-        return service.endpoints.compactMap { (value) in
-            (value, self.sufficiesDifference(lhs: scope.request.fullIdentifier, rhs: value.request))
-        }.compactMap{($0.0, max($0.1.0, $0.1.1))}.sorted { (left, right) -> Bool in
-            left.1 < right.1
-            }.first(where: {$0.1 <= self.threshold})?.0
     }
 }
 

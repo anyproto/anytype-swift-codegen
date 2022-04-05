@@ -51,7 +51,8 @@ public class ServiceGenerator {
     
     public init(scope: AccessLevelScope, templatePaths: [String], serviceFilePath: String) {
         options = Options(scope: scope, templatePaths: templatePaths)
-        scopeMatcher = ScopeMatcher(threshold: bestMatchThreshold, filePath: serviceFilePath)
+        let endpoints = RpcServiceFileParser().parse(serviceFilePath) ?? []
+        scopeMatcher = ScopeMatcher(threshold: bestMatchThreshold, endpoints: endpoints)
     }
     
     public func generate(_ node: SourceFileSyntax) -> Syntax {
