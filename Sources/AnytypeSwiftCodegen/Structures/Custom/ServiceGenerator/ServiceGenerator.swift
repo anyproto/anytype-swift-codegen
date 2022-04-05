@@ -1,42 +1,49 @@
-//
-//  ServiceWithRequestAndResponseGenerator.swift
-//  
-//
-//  Created by Dmitry Lobanov on 27.10.2020.
-//
-
 import SwiftSyntax
-public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
+
+extension ServiceGenerator {
     struct Options {
-        var serviceName: String = "Service"
-        var templatePaths: [String] = []
-        var requestName: String = "Request"
-        var responseName: String = "Response"
-        var serviceFilePath: String = ""
-        var bestMatchThreshold: Int = 8 // size of scope name + 1.
-        var simple: Bool = true
-        var scopeOfService = AccessLevelScope.public
-        var scopeOfExtension = AccessLevelScope.public
+        let serviceName: String = "Service"
+        let requestName: String = "Request"
+        let responseName: String = "Response"
+        let bestMatchThreshold: Int = 8 // size of scope name + 1.
+        let simple: Bool = true
+        
+        let scope: AccessLevelScope
+        let templatePaths: [String]
+        var serviceFilePath: String
+        
+        init(
+            scope: AccessLevelScope,
+            templatePaths: [String],
+            serviceFilePath: String
+        ) {
+            self.scope = scope
+            self.templatePaths = templatePaths
+            self.serviceFilePath = serviceFilePath
+        }
+    }
+}
+
+
+public class ServiceGenerator: SyntaxRewriter {
+    
+    var options: Options
+    
+    public init(
+        scope: AccessLevelScope = AccessLevelScope.public,
+        templatePaths: [String] = [],
+        serviceFilePath: String = ""
+    ) {
+        options = Options(
+            scope: scope,
+            templatePaths: templatePaths,
+            serviceFilePath: serviceFilePath
+        )
     }
     
-    var options: Options = .init()
-    init(options: Options) {
-        self.options = options
-    }
-    public override init() {}
-    
-    public func with(templatePaths: [String]) -> Self {
-        self.options.templatePaths = templatePaths
-        return self
-    }
     public func with(serviceFilePath: String) -> Self {
-        self.options.serviceFilePath = serviceFilePath
-        _ = self.scopeMatcher.with(serviceFilePath).with(self.options.bestMatchThreshold)
-        return self
-    }
-    public func with(scope: AccessLevelScope) -> Self {
-        self.options.scopeOfExtension = scope
-        self.options.scopeOfService = scope
+        options.serviceFilePath = serviceFilePath
+        _ = scopeMatcher.with(serviceFilePath).with(self.options.bestMatchThreshold)
         return self
     }
     // for debug
@@ -116,7 +123,7 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
     }
 }
 
-extension ServiceWithRequestAndResponseGenerator: Generator {
+extension ServiceGenerator: Generator {
     func generate(servicePart: ServicePart, options: Options) -> [DeclSyntax] {
         switch servicePart {
         case let .publicInvocation(scope):
@@ -149,7 +156,7 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
             
-            let enumTokenSyntax = options.scopeOfExtension.token
+            let enumTokenSyntax = options.scope.token
             
             let enumAttributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(enumTokenSyntax.withTrailingTrivia(.spaces(1)))
@@ -193,7 +200,7 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1)))
             
-            let extensionTokenSyntax: TokenSyntax = options.scopeOfExtension.token
+            let extensionTokenSyntax: TokenSyntax = options.scope.token
             
             let extensionAttributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(extensionTokenSyntax.withTrailingTrivia(.spaces(1)))
@@ -214,7 +221,7 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
     }
 }
 
-extension ServiceWithRequestAndResponseGenerator {
+extension ServiceGenerator {
     class ScopeMatcher {
         private var service: RpcServiceFileParser.ServiceParser.Service?
         private var threshold: Int = 0

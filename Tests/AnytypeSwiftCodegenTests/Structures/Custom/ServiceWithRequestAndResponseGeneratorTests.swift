@@ -1,5 +1,5 @@
 //
-//  ServiceWithRequestAndResponseGeneratorTests.swift
+//  ServiceGeneratorTests.swift
 //  
 //
 //  Created by Dmitry Lobanov on 27.10.2020.
@@ -60,7 +60,7 @@ extension Fruit.Raspberry {
 /// Fix output later.
 /// Trust code not test in this case.
 ///
-final class ServiceWithRequestAndResponseGeneratorTests: XCTestCase
+final class ServiceGeneratorTests: XCTestCase
 {
     // New test.
     func test_public() throws
@@ -143,7 +143,7 @@ final class ServiceWithRequestAndResponseGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .public)
+            using: ServiceGenerator().with(scopeMatcherAsDebug: true)
         )
     }
 
@@ -216,7 +216,7 @@ final class ServiceWithRequestAndResponseGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .internal)
+            using: ServiceGenerator(scope: .internal).with(scopeMatcherAsDebug: true)
         )
     }
 }
