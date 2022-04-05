@@ -10,13 +10,7 @@ struct GenerateCommand: CommandProtocol
     let verb = "generate"
     let function = "Apply source transform and output it to different file."
 
-    func run(_ options: Options) throws {
-        
-        guard !options.list else {
-            Transform.documentation().forEach{ print($0) }
-            return
-        }
-        
+    func run(_ options: Options) throws {        
         guard FileManager.default.fileExists(atPath: options.filePath) else {
             throw Error.inputFileNotExists(options.filePath)
         }
