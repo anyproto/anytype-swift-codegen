@@ -11,7 +11,11 @@ class NestedTypesScanner {
     func scan(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
         switch declaration {
         case let value as StructDeclSyntax:
-            return .init(declaration: .structure, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(scan))
+            return DeclarationNotation(
+                declaration: .structure,
+                syntax: value,
+                declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(scan)
+            )
             
         case let value as EnumDeclSyntax:
             return .init(declaration: .enumeration, syntax: value, declarations: value.members.members.enumerated().compactMap{$0.element.decl}.compactMap(scan))

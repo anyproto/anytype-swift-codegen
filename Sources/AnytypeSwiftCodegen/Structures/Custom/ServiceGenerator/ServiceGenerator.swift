@@ -2,29 +2,19 @@ import SwiftSyntax
 
 extension ServiceGenerator {    
     struct Scope {
-        var this: DeclarationNotation = .init()
-        var request: DeclarationNotation = .init()
-        var response: DeclarationNotation = .init()
+        let this: DeclarationNotation
+        let request: DeclarationNotation
+        let response: DeclarationNotation
     }
     
     enum Part {
         struct Options {
-            var serviceName: String = ""
-            var scope: Scope = .init()
+            let serviceName: String
+            let scope: Scope
         }
+        
         case service(Options)
         case scope(Options)
-    }
-    
-    enum PartResult {
-        case service(Syntax)
-        case scope(Syntax)
-        func raw() -> Syntax {
-            switch self {
-            case let .service(value): return value
-            case let .scope(value): return value
-            }
-        }
     }
     
     enum ServicePart {
@@ -35,28 +25,17 @@ extension ServiceGenerator {
 
 extension ServiceGenerator {
     struct Options {
-        let serviceName: String = "Service"
-        let requestName: String = "Request"
-        let responseName: String = "Response"
-        let bestMatchThreshold: Int = 8 // size of scope name + 1.
-        
         let scope: AccessLevelScope
         let templatePaths: [String]
-        let serviceFilePath: String
-        
-        init(
-            scope: AccessLevelScope,
-            templatePaths: [String],
-            serviceFilePath: String
-        ) {
-            self.scope = scope
-            self.templatePaths = templatePaths
-            self.serviceFilePath = serviceFilePath
-        }
     }
 }
 
-public class ServiceGenerator: SyntaxRewriter {
+public class ServiceGenerator {
+    
+    private let serviceName: String = "Service"
+    private let requestName: String = "Request"
+    private let responseName: String = "Response"
+    private let bestMatchThreshold: Int = 8 // size of scope name + 1.
     
     private let options: Options
     private let scopeMatcher: ScopeMatcher
@@ -70,21 +49,9 @@ public class ServiceGenerator: SyntaxRewriter {
     private let storedPropertiesExtractor = StoredPropertiesExtractor()
     
     
-    public init(
-        scope: AccessLevelScope = AccessLevelScope.public,
-        templatePaths: [String] = [],
-        serviceFilePath: String = ""
-    ) {
-        options = Options(
-            scope: scope,
-            templatePaths: templatePaths,
-            serviceFilePath: serviceFilePath
-        )
-        scopeMatcher = ScopeMatcher(threshold: options.bestMatchThreshold, filePath: serviceFilePath)
-    }
-    
-    override public func visit(_ node: SourceFileSyntax) -> Syntax {
-        generate(node)
+    public init(scope: AccessLevelScope, templatePaths: [String], serviceFilePath: String) {
+        options = Options(scope: scope, templatePaths: templatePaths)
+        scopeMatcher = ScopeMatcher(threshold: bestMatchThreshold, filePath: serviceFilePath)
     }
     
     public func generate(_ node: SourceFileSyntax) -> Syntax {
@@ -106,8 +73,8 @@ public class ServiceGenerator: SyntaxRewriter {
     }
     
     private func match(_ declaration: DeclarationNotation) -> Scope? {
-        if let request = matchNested(declaration, identifier: options.requestName),
-           let response = matchNested(declaration, identifier: options.requestName) {
+        if let request = matchNested(declaration, identifier: requestName),
+           let response = matchNested(declaration, identifier: requestName) {
             return Scope(this: declaration, request: request, response: response)
         }
         return nil
@@ -149,10 +116,13 @@ extension ServiceGenerator: Generator {
         case let .service(value):
             let serviceName = value.serviceName
             let serviceNameIdentifier = SyntaxFactory.makeIdentifier(serviceName)
-            // our result is enum
             
-            // fill enum
-            let memberDeclList: [MemberDeclListItemSyntax] = [self.generate(servicePart: .publicInvocation(value.scope), options: options), self.generate(servicePart: .template, options: options)].flatMap{$0}.compactMap(MemberDeclListItemSyntax.init({_ in}).withDecl)
+            let memberDeclList: [MemberDeclListItemSyntax] = [
+                generate(servicePart: .publicInvocation(value.scope), options: options),
+                generate(servicePart: .template, options: options)
+            ]
+                .flatMap{$0}
+                .compactMap(MemberDeclListItemSyntax({_ in}).withDecl)
                                                 
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
@@ -207,10 +177,7 @@ extension ServiceGenerator: Generator {
     private func generate(scope: Scope) -> Syntax {
         return generate(
             part: .scope(
-                .init(
-                    serviceName: options.serviceName,
-                    scope: scope
-                )
+                .init(serviceName: serviceName, scope: scope)
             ),
             options: options
         )
