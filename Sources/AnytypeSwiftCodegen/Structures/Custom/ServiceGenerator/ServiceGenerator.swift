@@ -1,8 +1,6 @@
 import SwiftSyntax
 
-extension ServiceGenerator {
-    typealias DeclarationNotation = NestedTypesScanner.DeclarationNotation
-    
+extension ServiceGenerator {    
     struct Scope {
         var this: DeclarationNotation = .init()
         var request: DeclarationNotation = .init()

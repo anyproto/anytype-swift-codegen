@@ -1,50 +1,20 @@
 import SwiftSyntax
 
-public class ErrorProtocolAdoptionGenerator: SyntaxRewriter {
-    typealias DeclarationNotation = NestedTypesScanner.DeclarationNotation
-    
-    private let adopteeIdentifier: String = "Error"
+public class ErrorProtocolAdoptionGenerator: Generator {    
     private let adoptedProtocolTypeIdentifier: String = "Swift.Error"
     private let scanner = NestedTypesScanner()
     
-    override public func visit(_ node: SourceFileSyntax) -> Syntax {
-        Syntax(generate(node))
-    }
+    public init() { }
     
-    private func match(_ declaration: DeclarationNotation, predicate: String) -> DeclarationNotation? {
-        if declaration.identifier == predicate {
-            return declaration
-        }
-        else {
-            return nil
-        }
-    }
-    
-    private func search(_ declaration: DeclarationNotation, predicate: String) -> [DeclarationNotation] {
-        [self.match(declaration, predicate: predicate)].compactMap{$0} + declaration.declarations.flatMap{self.search($0, predicate: predicate)}
-    }
-
-    private func search(_ syntax: DeclSyntaxProtocol) -> [DeclarationNotation] {
-        guard let declaration = scanner.scan(syntax) else {
-            return []
-        }
-        let errors = self.search(declaration, predicate: adopteeIdentifier)
-        return errors
-    }
-}
-
-extension ErrorProtocolAdoptionGenerator: Generator {
     public func generate(_ node: SourceFileSyntax) -> Syntax {
-        let items = node.statements
+        let statements = node.statements
             .compactMap{ $0.item.asProtocol(DeclSyntaxProtocol.self) }
-            .compactMap(self.search)
+            .compactMap(search)
             .flatMap{$0}
-        let declarations = items.map(generate)
-        
-        let statements = declarations
+            .map(generate)
             .map(Syntax.init)
-            .compactMap{
-                value in CodeBlockItemSyntax.init { (b) in b.useItem(value) }
+            .compactMap { syntax in
+                CodeBlockItemSyntax { builder in builder.useItem(syntax) }
             }
         
         let result = SyntaxFactory
@@ -56,18 +26,30 @@ extension ErrorProtocolAdoptionGenerator: Generator {
         return Syntax(result)
     }
     
+    // MARK: - Private
     private func generate(_ item: DeclarationNotation) -> ExtensionDeclSyntax {
         let extendedType = item.fullIdentifier
         let extendedTypeSyntax = SyntaxFactory.makeTypeIdentifier(extendedType)
         let inheritanceType = adoptedProtocolTypeIdentifier
         let inheritanceTypeSyntax = SyntaxFactory.makeTypeIdentifier(inheritanceType)
-        let inheritedTypeListSyntax = SyntaxFactory.makeInheritedTypeList([
-            .init {b in b.useTypeName(inheritanceTypeSyntax)}
-        ])
-        let typeInheritanceClauseSyntax = SyntaxFactory.makeTypeInheritanceClause(colon: SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)), inheritedTypeCollection: inheritedTypeListSyntax)
+        let inheritedTypeListSyntax = SyntaxFactory.makeInheritedTypeList(
+            [
+                .init {b in b.useTypeName(inheritanceTypeSyntax)}
+            ]
+        )
+        let typeInheritanceClauseSyntax = SyntaxFactory
+            .makeTypeInheritanceClause(
+                colon: SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)),
+                inheritedTypeCollection: inheritedTypeListSyntax
+            )
         
         let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList([])
-        let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken(), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1)))
+        let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(
+            leftBrace: SyntaxFactory.makeLeftBraceToken(),
+            members: memberDeclListSyntax,
+            rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1))
+        
+        )
         return SyntaxFactory.makeExtensionDecl(
             attributes: nil,
             modifiers: nil,
@@ -77,5 +59,27 @@ extension ErrorProtocolAdoptionGenerator: Generator {
             genericWhereClause: nil,
             members: memberDeclBlockSyntax.withLeadingTrivia(.spaces(1))
         )
+    }
+    
+    private func match(_ declaration: DeclarationNotation) -> DeclarationNotation? {
+        if declaration.identifier == "Error" {
+            return declaration
+        }
+        else {
+            return nil
+        }
+    }
+    
+    private func search(_ declaration: DeclarationNotation) -> [DeclarationNotation] {
+        let a = [ match(declaration) ].compactMap{$0}
+        let b = declaration.declarations.flatMap{ search($0) }
+        
+        return a + b
+    }
+
+    private func search(_ syntax: DeclSyntaxProtocol) -> [DeclarationNotation] {
+        guard let declaration = scanner.scan(syntax) else { return [] }
+        
+        return search(declaration)
     }
 }
