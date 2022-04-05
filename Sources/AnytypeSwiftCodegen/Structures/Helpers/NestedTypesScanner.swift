@@ -1,14 +1,14 @@
 import SwiftSyntax
 
-class NestedTypesScanner: SyntaxRewriter {
-    enum DeclarationType: String, CustomStringConvertible {
-        var description: String { return self.rawValue }
-        
-        case unknown
-        case enumeration
-        case structure
-    }
+enum DeclarationType: String, CustomStringConvertible {
+    case unknown
+    case enumeration
+    case structure
     
+    var description: String { return self.rawValue }
+}
+
+class NestedTypesScanner: SyntaxRewriter {
     struct DeclarationNotation: CustomStringConvertible {
         var description: String {
             output(0)

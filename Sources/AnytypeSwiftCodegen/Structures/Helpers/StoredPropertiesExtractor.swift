@@ -2,13 +2,6 @@ import Foundation
 import SwiftSyntax
 
 class StoredPropertiesExtractor: SyntaxRewriter {
-    struct Options {
-        var filterNames: [String] = []
-        var allowInconsistentSetter: Bool = false
-    }
-    
-    // MARK: Variables
-    var options: Options = .init()
     // StructName -> (Struct, [MemberItem])
     var extractedFields: [String: (TypeSyntax, [Variable])] = [:]
     
@@ -16,15 +9,19 @@ class StoredPropertiesExtractor: SyntaxRewriter {
     
     // MARK: Extraction
     func extract(_ node: StructDeclSyntax) -> [String: (TypeSyntax, [Variable])] {
-        let syntax = node
-        let variables = syntax.members.members.enumerated().compactMap{ $0.element.decl.as(VariableDeclSyntax.self) }.map(self.filter.variable).filter({
-            !($0.isEmpty() || $0.computed() || $0.unknownType() || $0.inaccessibleDueToAccessLevel())
-        })
+        let variables = node.members.members.enumerated()
+            .compactMap{
+                $0.element.decl.as(VariableDeclSyntax.self)
+            }.map {
+                filter.variable($0)
+            }.filter {
+                !($0.isEmpty || $0.computed || $0.unknownType || $0.inaccessibleDueToAccessLevel())
+            }
                 
-        let identifier = syntax.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.extractedFields[identifier] = (syntax.fullIdentifier, variables)
+        let identifier = node.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        extractedFields[identifier] = (node.fullIdentifier, variables)
         
-        return self.extractedFields
+        return extractedFields
     }
     
     // MARK: Visits
