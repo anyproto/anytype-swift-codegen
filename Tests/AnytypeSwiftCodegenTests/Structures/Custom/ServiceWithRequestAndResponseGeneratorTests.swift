@@ -143,7 +143,7 @@ final class ServiceGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceGenerator().with(scopeMatcherAsDebug: true)
+            using: ServiceGenerator()
         )
     }
 
@@ -216,7 +216,7 @@ final class ServiceGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceGenerator(scope: .internal).with(scopeMatcherAsDebug: true)
+            using: ServiceGenerator(scope: .internal)
         )
     }
 }

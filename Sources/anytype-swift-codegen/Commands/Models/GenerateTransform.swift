@@ -16,9 +16,11 @@ extension GenerateCommand {
                 return MemberwiseConvenientInitializerGenerator()
                     .generate(source)
             case .serviceWithRequestAndResponse:
-                return ServiceGenerator(templatePaths: [options.templateFilePath])
-                    .with(serviceFilePath: options.serviceFilePath)
-                    .generate(source)
+                return ServiceGenerator(
+                    templatePaths: [options.templateFilePath],
+                    serviceFilePath: options.serviceFilePath
+                )
+                .generate(source)
             }
         }
     }

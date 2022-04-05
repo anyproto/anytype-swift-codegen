@@ -1,15 +1,11 @@
 class ScopeMatcher {
-    private var service: RpcServiceFileParser.ServiceParser.Service?
-    private var threshold: Int = 0
-    func with(_ threshold: Int) -> Self {
+    private let service: RpcServiceFileParser.ServiceParser.Service?
+    private let threshold: Int
+    
+    init(threshold: Int, filePath: String) {
         self.threshold = threshold
-        return self
+        self.service = RpcServiceFileParser(options: .init(filePath: filePath)).parse(filePath)
     }
-    func with(_ filePath: String) -> Self {
-        self.service = RpcServiceFileParser.init(options: .init(filePath: filePath)).parse(filePath)
-        return self
-    }
-    init() {}
     
     // Given two strings:
     // A = "abcdef"
@@ -42,15 +38,6 @@ class ScopeMatcher {
         }.compactMap{($0.0, max($0.1.0, $0.1.1))}.sorted { (left, right) -> Bool in
             left.1 < right.1
             }.first(where: {$0.1 <= self.threshold})?.0
-    }
-    
-    static var debug: ScopeMatcher = Debug()
-    
-    class Debug: ScopeMatcher {
-        var endpoint: RpcServiceFileParser.ServiceParser.Service.Endpoint = .init(name: "", request: "", response: "")
-        override func bestRpc(for scope: ServiceGenerator.Scope) -> RpcServiceFileParser.ServiceParser.Service.Endpoint? {
-            endpoint
-        }
     }
 }
 

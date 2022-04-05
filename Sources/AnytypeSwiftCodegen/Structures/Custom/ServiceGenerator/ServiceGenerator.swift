@@ -10,7 +10,7 @@ extension ServiceGenerator {
         
         let scope: AccessLevelScope
         let templatePaths: [String]
-        var serviceFilePath: String
+        let serviceFilePath: String
         
         init(
             scope: AccessLevelScope,
@@ -27,7 +27,8 @@ extension ServiceGenerator {
 
 public class ServiceGenerator: SyntaxRewriter {
     
-    var options: Options
+    let options: Options
+    let scopeMatcher: ScopeMatcher
     
     public init(
         scope: AccessLevelScope = AccessLevelScope.public,
@@ -39,19 +40,7 @@ public class ServiceGenerator: SyntaxRewriter {
             templatePaths: templatePaths,
             serviceFilePath: serviceFilePath
         )
-    }
-    
-    public func with(serviceFilePath: String) -> Self {
-        options.serviceFilePath = serviceFilePath
-        _ = scopeMatcher.with(serviceFilePath).with(self.options.bestMatchThreshold)
-        return self
-    }
-    // for debug
-    public func with(scopeMatcherAsDebug: Bool) -> Self {
-        if scopeMatcherAsDebug {
-            self.scopeMatcher = ScopeMatcher.debug
-        }
-        return self
+        scopeMatcher = ScopeMatcher(threshold: options.bestMatchThreshold, filePath: serviceFilePath)
     }
     
     typealias DeclarationNotation = NestedTypesScanner.DeclarationNotation
@@ -88,7 +77,6 @@ public class ServiceGenerator: SyntaxRewriter {
     var publicInvocationWithQueue: PublicInvocationOnQueueReturningFutureGenerator = .init()
     var publicInvocationReturingResult: PublicInvocationReturningResultGenerator = .init()
     var storedPropertiesExtractor: StoredPropertiesExtractor = .init()
-    var scopeMatcher: ScopeMatcher = .init()
     
     enum ServicePart {
         case publicInvocation(Scope)
@@ -170,17 +158,8 @@ extension ServiceGenerator: Generator {
             let scopeTypeSyntax = SyntaxFactory.makeTypeIdentifier(scopeName)
             // NOTE: scopeName except first scope. Custom behaviour.
             
-            var suffix = ""
-            guard let someSuffix = self.scopeMatcher.bestRpc(for: value.scope)?.name else {
+            guard let suffix = scopeMatcher.bestRpc(for: value.scope)?.name else {
                 return .init(SyntaxFactory.makeBlankSourceFile())
-            }
-            if self.scopeMatcher is ScopeMatcher.Debug {
-                // do something different
-                // use old scheme with class names.
-                suffix = scopeName.split(separator: ".").dropFirst().joined()
-            }
-            else {
-                suffix = someSuffix
             }
             
             // if suffix not found, we should return empty syntax.
