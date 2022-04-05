@@ -35,10 +35,10 @@ public class ServiceGenerator {
     private let serviceName: String = "Service"
     private let requestName: String = "Request"
     private let responseName: String = "Response"
-    private let bestMatchThreshold: Int = 8 // size of scope name + 1.
     
     private let options: Options
-    private let scopeMatcher: ScopeMatcher
+    private let serviceFilePath: String
+    private let scopeMatcher = ScopeMatcher(threshold: 8) // size of scope name + 1.
     private let nestedTypesScanner = NestedTypesScanner()
     private let templateGenerator = TemplateGenerator()
     
@@ -51,8 +51,7 @@ public class ServiceGenerator {
     
     public init(scope: AccessLevelScope, templatePaths: [String], serviceFilePath: String) {
         options = Options(scope: scope, templatePaths: templatePaths)
-        let endpoints = RpcServiceFileParser().parse(serviceFilePath) ?? []
-        scopeMatcher = ScopeMatcher(threshold: bestMatchThreshold, endpoints: endpoints)
+        self.serviceFilePath = serviceFilePath
     }
     
     public func generate(_ node: SourceFileSyntax) -> Syntax {
@@ -142,8 +141,10 @@ extension ServiceGenerator: Generator {
             let scopeTypeSyntax = SyntaxFactory.makeTypeIdentifier(scopeName)
             // NOTE: scopeName except first scope. Custom behaviour.
             
-            guard let suffix = scopeMatcher.bestRpc(for: value.scope)?.name else {
-                return .init(SyntaxFactory.makeBlankSourceFile())
+            guard let endpoints = RpcServiceFileParser().parse(serviceFilePath),
+                    let suffix = scopeMatcher.bestRpc(scope: value.scope, endpoints: endpoints)?.name
+            else {
+                return .blank
             }
             
             // if suffix not found, we should return empty syntax.

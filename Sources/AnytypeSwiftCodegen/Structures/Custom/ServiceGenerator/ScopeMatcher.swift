@@ -1,13 +1,11 @@
 class ScopeMatcher {
-    private let endpoints: [Endpoint]
     private let threshold: Int
     
-    init(threshold: Int, endpoints: [Endpoint]) {
+    init(threshold: Int) {
         self.threshold = threshold
-        self.endpoints = endpoints
     }
     
-    func bestRpc(for scope: ServiceGenerator.Scope) -> Endpoint? {
+    func bestRpc(scope: ServiceGenerator.Scope, endpoints: [Endpoint]) -> Endpoint? {
         return endpoints.compactMap { (value) in
             (value, self.sufficiesDifference(lhs: scope.request.fullIdentifier, rhs: value.request))
         }

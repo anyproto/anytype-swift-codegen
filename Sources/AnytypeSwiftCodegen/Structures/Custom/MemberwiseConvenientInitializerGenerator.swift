@@ -142,7 +142,7 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
         }
         
         if items.isEmpty {
-            return .init(SyntaxFactory.makeBlankSourceFile())
+            return .blank
         }
                 
         return .init(SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(items), eofToken: SyntaxFactory.makeToken(.eof, presence: .present)))
