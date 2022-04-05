@@ -1,10 +1,3 @@
-//
-//  GenerateCommand.swift
-//  
-//
-//  Created by Dmitry Lobanov on 25.01.2020.
-//
-
 import Foundation
 import Curry
 import Commandant
@@ -14,28 +7,6 @@ import AnytypeSwiftCodegen
 
 struct GenerateCommand: CommandProtocol
 {
-    
-    enum FileExtensions {
-        case swiftExtension
-        case protobufExtension
-        func extName() -> String {
-            switch self {
-            case .swiftExtension: return "swift"
-            case .protobufExtension: return "proto"
-            }
-        }
-    }
-    
-    enum Error: Swift.Error {
-        case inputFileNotExists(String)
-        case outputFileNotExists(String)
-        case serviceFileNotExists(String)
-        case filesAreEqual(String, String)
-        case filesAreCorrupted
-        case fileShouldHaveExtension(String, FileExtensions)
-        case transformDoesntExist(String)
-    }
-
     let verb = "generate"
     let function = "Apply source transform and output it to different file."
 
@@ -110,77 +81,6 @@ struct GenerateCommand: CommandProtocol
             let optionalHeader = [options.commentsHeaderFilePath, options.importsFilePath].compactMap{try? File(path: $0).readAsString()}.joined(separator: "\n\n")
             let output = [optionalHeader, result.description].joined(separator: "\n")
             try target.write(output)
-        }
-    }
-}
-
-extension GenerateCommand {
-    struct Options: OptionsProtocol {
-        fileprivate let filePath: String
-        fileprivate let debug: Bool
-        fileprivate let outputFilePath: String
-        fileprivate let transform: String
-        fileprivate let list: Bool
-        fileprivate let templateFilePath: String
-        fileprivate let commentsHeaderFilePath: String
-        fileprivate let importsFilePath: String
-        fileprivate let serviceFilePath: String
-        
-        fileprivate static let defaultStringValue: String = ""
-        
-        public static func evaluate(_ m: CommandMode) -> Result<Self, CommandantError<Swift.Error>> {
-            curry(Self.init)
-                <*> m <| Option(key: "filePath", defaultValue: defaultStringValue, usage: "The path to the file in 'generate' action.")
-                <*> m <| Switch(flag: "d", key: "debug", usage: "DEBUG")
-                <*> m <| Option(key: "outputFilePath", defaultValue: defaultStringValue, usage: "Use with flag --filePath. It will output to this file")
-                <*> m <| Option(key: "transform", defaultValue: "", usage: "Transform with name or shortcut.")
-                <*> m <| Switch(flag: "l", key: "list", usage: "List available transforms")
-                <*> m <| Option(key: "templateFilePath", defaultValue: defaultStringValue, usage: "Template file that should be used in some transforms")
-                <*> m <| Option(key: "commentsHeaderFilePath", defaultValue: defaultStringValue, usage: "Comments header file that will be included at top")
-                <*> m <| Option(key: "importsFilePath", defaultValue: defaultStringValue, usage: "Import file that will be included at top after comments if presented")
-                <*> m <| Option(key: "serviceFilePath", defaultValue: defaultStringValue, usage: "Rpc service file that contains Rpc services descriptions in .proto (protobuffers) format.")
-        }
-    }
-}
-
-extension GenerateCommand {
-    enum Transform: String, CaseIterable {
-        case errorAdoption, requestAndResponse, memberwiseInitializer, serviceWithRequestAndResponse
-        func transform(options: Options) -> (SourceFileSyntax) -> Syntax {
-            switch self {
-            case .errorAdoption: return ErrorProtocolAdoptionGenerator().generate
-            case .requestAndResponse: return RequestResponseExtensionGenerator().with(templatePaths: [options.templateFilePath]).with(serviceFilePath: options.serviceFilePath).generate
-            case .memberwiseInitializer: return MemberwiseConvenientInitializerGenerator().generate
-            case .serviceWithRequestAndResponse: return ServiceWithRequestAndResponseGenerator().with(templatePaths: [options.templateFilePath]).with(serviceFilePath: options.serviceFilePath).generate
-            }
-        }
-        func shortcut() -> String {
-            switch self {
-            case .errorAdoption: return "e"
-            case .requestAndResponse: return "rr"
-            case .memberwiseInitializer: return "mwi"
-            case .serviceWithRequestAndResponse: return "swrr"
-            }
-        }
-        func documentation() -> String {
-            switch self {
-            case .errorAdoption: return "Adopt error protocol to .Error types."
-            case .requestAndResponse: return "Add Invocation and Service to Scope IF Scope.Request and Scope.Response types exist."
-            case .memberwiseInitializer: return "Add Memberwise initializers in extension."
-            case .serviceWithRequestAndResponse: return "Add Invocation and Service to Scope with Request converter and Request parameters IF Scope.Request and Scope.Response types exist."
-            }
-        }
-        static func create(_ shortcutOrName: String) -> Self? {
-            Self.init(rawValue: shortcutOrName) ?? .create(shortcut: shortcutOrName)
-        }
-        static func create(shortcut: String) -> Self? {
-            allCases.first(where: {$0.shortcut() == shortcut})
-        }
-        static func list() -> [(String, String, String)] {
-            allCases.compactMap {($0.rawValue, $0.shortcut() ,$0.documentation())}
-        }
-        static func documentation() -> [String] {
-            list().map{"flag: \($0.1) -> name: \($0.0) \n \t\t\t \($0.2)\n"}
         }
     }
 }
