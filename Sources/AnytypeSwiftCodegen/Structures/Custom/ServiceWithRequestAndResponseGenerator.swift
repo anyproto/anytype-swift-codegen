@@ -15,8 +15,8 @@ public class ServiceWithRequestAndResponseGenerator: SyntaxRewriter {
         var serviceFilePath: String = ""
         var bestMatchThreshold: Int = 8 // size of scope name + 1.
         var simple: Bool = true
-        var scopeOfService: AccessLevelScope = .publicScope
-        var scopeOfExtension: AccessLevelScope = .publicScope
+        var scopeOfService = AccessLevelScope.public
+        var scopeOfExtension = AccessLevelScope.public
     }
     
     var options: Options = .init()
@@ -149,7 +149,7 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
             
-            let enumTokenSyntax: TokenSyntax = self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
+            let enumTokenSyntax = options.scopeOfExtension.token
             
             let enumAttributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(enumTokenSyntax.withTrailingTrivia(.spaces(1)))
@@ -193,7 +193,7 @@ extension ServiceWithRequestAndResponseGenerator: Generator {
             let memberDeclListSyntax = SyntaxFactory.makeMemberDeclList(memberDeclList)
             let memberDeclBlockSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), members: memberDeclListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1)))
             
-            let extensionTokenSyntax: TokenSyntax = self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
+            let extensionTokenSyntax: TokenSyntax = options.scopeOfExtension.token
             
             let extensionAttributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(extensionTokenSyntax.withTrailingTrivia(.spaces(1)))
