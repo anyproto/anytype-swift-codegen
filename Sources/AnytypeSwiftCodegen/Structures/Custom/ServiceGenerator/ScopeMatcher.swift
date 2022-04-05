@@ -31,7 +31,7 @@ class ScopeMatcher {
         )
     }
     
-    func bestRpc(for scope: ServiceGenerator.Scope) -> RpcServiceFileParser.ServiceParser.Service.Endpoint? {
+    func bestRpc(for scope: ServiceGenerator.Scope) -> RpcServiceFileParser.ServiceParser.Service.Endpoint? {        
         guard let service = service else { return nil }
         return service.endpoints.compactMap { (value) in
             (value, self.sufficiesDifference(lhs: scope.request.fullIdentifier, rhs: value.request))

@@ -6,7 +6,6 @@ extension ServiceGenerator {
         let requestName: String = "Request"
         let responseName: String = "Response"
         let bestMatchThreshold: Int = 8 // size of scope name + 1.
-        let simple: Bool = true
         
         let scope: AccessLevelScope
         let templatePaths: [String]
@@ -29,6 +28,15 @@ public class ServiceGenerator: SyntaxRewriter {
     
     let options: Options
     let scopeMatcher: ScopeMatcher
+    let nestedTypesScanner = NestedTypesScanner()
+    let templateGenerator = TemplateGenerator()
+    
+    let requestParametersTypealiasGenerator = RequestParametersTypealiasGenerator()
+    let requestParametersRequestConverterGenerator = RequestParametersRequestConverterGenerator()
+    let publicInvocationWithQueue = PublicInvocationOnQueueReturningFutureGenerator()
+    let publicInvocationReturingResult = PublicInvocationReturningResultGenerator()
+    let storedPropertiesExtractor = StoredPropertiesExtractor()
+    
     
     public init(
         scope: AccessLevelScope = AccessLevelScope.public,
@@ -68,15 +76,6 @@ public class ServiceGenerator: SyntaxRewriter {
             }
         }
     }
-    
-    var nestedTypesScanner: NestedTypesScanner = .init()
-    // TODO: Make later service generator separately.
-    var templateGenerator: TemplateGenerator = .init()
-    lazy var requestParametersTypealiasGenerator: RequestParametersTypealiasGenerator = {RequestParametersTypealiasGenerator.init(options: .init(simple: self.options.simple))}()
-    lazy var requestParametersRequestConverterGenerator: RequestParametersRequestConverterGenerator = {RequestParametersRequestConverterGenerator.init(options: .init(simple: self.options.simple))}()
-    var publicInvocationWithQueue: PublicInvocationOnQueueReturningFutureGenerator = .init()
-    var publicInvocationReturingResult: PublicInvocationReturningResultGenerator = .init()
-    var storedPropertiesExtractor: StoredPropertiesExtractor = .init()
     
     enum ServicePart {
         case publicInvocation(Scope)
