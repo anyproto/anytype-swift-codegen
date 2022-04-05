@@ -1,10 +1,3 @@
-//
-//  MemberwiseConvenientInitializerGenerator.swift
-//  
-//
-//  Created by Dmitry Lobanov on 21.01.2020.
-//
-
 import SwiftSyntax
 
 // NOTE: Extract necessary fields for structure.

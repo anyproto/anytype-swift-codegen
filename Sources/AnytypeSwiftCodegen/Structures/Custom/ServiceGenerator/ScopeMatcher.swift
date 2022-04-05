@@ -21,7 +21,6 @@ class ScopeMatcher {
         let rightEndIndex = right.endIndex
         
         while leftStartIndex != leftEndIndex, rightStartIndex != rightEndIndex, left[leftStartIndex] == right[rightStartIndex] {
-//                print("\(left[leftStartIndex]) == \(right[rightStartIndex])")
             leftStartIndex = left.index(after: leftStartIndex)
             rightStartIndex = right.index(after: rightStartIndex)
         }

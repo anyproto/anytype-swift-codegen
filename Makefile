@@ -26,5 +26,6 @@ release: build-release build-dependency-swift-format
 	echo "Gathering tools in ./release"
 	@cp ./.build/release/anytype-swift-codegen ./release
 	@cp ./.build/release/swift-format ./release
+	@open ./release
 
 clean-release: clean artifacts-clean release

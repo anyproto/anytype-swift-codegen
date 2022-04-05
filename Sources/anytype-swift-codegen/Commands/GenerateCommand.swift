@@ -42,7 +42,7 @@ struct GenerateCommand: CommandProtocol
             throw Error.transformDoesntExist(options.transform)
         }
          
-        if [.serviceWithRequestAndResponse].contains(transform) {
+        if .serviceWithRequestAndResponse == transform {
             guard let serviceFile = try? File(path: options.serviceFilePath) else {
                 throw Error.serviceFileNotExists(options.serviceFilePath)
             }
