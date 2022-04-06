@@ -1,26 +1,17 @@
-//
-//  RequestParametersRequestConverterGenerator.swift
-//  
-//
-//  Created by Dmitry Lobanov on 27.10.2020.
-//
-
 import SwiftSyntax
 
-/*
- private static func request(_ parameters: RequestParameters) -> Request {
-    .init(abc: parameters.abc, def: parameters.def)
- }
- */
-
 class RequestParametersRequestConverterGenerator: SyntaxRewriter {
-    struct Options {
-        var functionName = "request"
-        var functionArgumentName = "parameters"
-        var functionArgumentType = "RequestParameters"
-        var resultType = "Request"
-        var simple: Bool = false
-    }
+    let functionName = "request"
+    let functionArgumentName = "parameters"
+    let functionArgumentType = "RequestParameters"
+    let resultType = "Request"
+
+    // for tests
+    var storedPropertiesList: [(String, String)] = [
+        ("abc", "String"),
+        ("def", "Int")
+    ]
+    
     static func convert(_ variables: [Variable]) -> [(String, String)] {
         variables.compactMap { entry -> (String, String)? in
             guard let type = entry.typeAnnotationSyntax?.type.description.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
@@ -38,21 +29,7 @@ class RequestParametersRequestConverterGenerator: SyntaxRewriter {
         self.storedPropertiesList = list
         return self
     }
-    
-    var storedPropertiesList: [(String, String)] = [
-        ("abc", "String"),
-        ("def", "Int")
-    ]
-    var options: Options = .init()
-    convenience init(options: Options, variables: [Variable]) {
-        self.init(options: options)
-        self.storedPropertiesList = Self.convert(variables)
-    }
-    init(options: Options) {
-        self.options = options
-    }
-    override init() {}
-    
+
     enum Part {
         case initializer,//, closureArgument, closure,
              function
@@ -77,47 +54,19 @@ class RequestParametersRequestConverterGenerator: SyntaxRewriter {
 }
 
 extension RequestParametersRequestConverterGenerator: Generator {
-    func generate(_ part: Part, options: Options) -> PartResult {
+    func generate(_ part: Part) -> PartResult {
         switch part {
         case .initializer:
-            if options.simple {
-                let simpleVariable = SyntaxFactory.makeVariableExpr(options.functionArgumentName)
-                return .initializer(.init(simpleVariable))
-            }
-            let keywordSyntax = SyntaxFactory.makeInitKeyword()
-            let calleeSyntax = SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(""), declNameArguments: nil)
-                                    
-            let invocationSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(calleeSyntax), dot: SyntaxFactory.makePeriodToken(), name: keywordSyntax, declNameArguments: nil)
-            
-            let functionCallArgumentList =
-                self.storedPropertiesList.compactMap{$0.0}.compactMap { name in
-                TupleExprElementSyntax.init { b in
-                    let parentVariableSyntax = SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(self.options.functionArgumentName), declNameArguments: nil)
-                    let dotIdentifier = SyntaxFactory.makePeriodToken()
-                    let nameIdentifier = SyntaxFactory.makeIdentifier(name)
-                    let memberAccessSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(parentVariableSyntax), dot: dotIdentifier, name: nameIdentifier, declNameArguments: nil)
-                    b.useLabel(SyntaxFactory.makeIdentifier(name))
-                    b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                    b.useExpression(.init(memberAccessSyntax))
-                    if name != self.storedPropertiesList.last?.0 {
-                        b.useTrailingComma(SyntaxFactory.makeCommaToken().withTrailingTrivia(.spaces(1)))
-                    }
-                }
-            }
-            
-            let functionCallArgumentListSyntax = SyntaxFactory.makeTupleExprElementList(functionCallArgumentList)
-            
-            let result =
-                SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(invocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: functionCallArgumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
-            return .initializer(.init(result))
+            let simpleVariable = SyntaxFactory.makeVariableExpr(functionArgumentName)
+            return .initializer(.init(simpleVariable))
                     
         case .function:
-            let returnTypeSyntax = SyntaxFactory.makeTypeIdentifier(options.resultType)
+            let returnTypeSyntax = SyntaxFactory.makeTypeIdentifier(resultType)
             let privateKeyword = SyntaxFactory.makePrivateKeyword()
             let staticKeyword = SyntaxFactory.makeStaticKeyword()
             let functionKeyword = SyntaxFactory.makeFuncKeyword()
-            let functionNameSyntax = SyntaxFactory.makeIdentifier(options.functionName)
-            let namesAndTypes = [(self.options.functionArgumentName, self.options.functionArgumentType)]
+            let functionNameSyntax = SyntaxFactory.makeIdentifier(functionName)
+            let namesAndTypes = [(self.functionArgumentName, self.functionArgumentType)]
             
             let parametersList: [FunctionParameterSyntax] = namesAndTypes.compactMap { (name, type) in
                 FunctionParameterSyntax.init{ b in
@@ -150,7 +99,7 @@ extension RequestParametersRequestConverterGenerator: Generator {
             
              
             var bodyCodeBlockItemList: [CodeBlockItemSyntax] = []
-            if case let .initializer(value) = self.generate(.initializer, options: self.options) {
+            if case let .initializer(value) = generate(.initializer) {
                 bodyCodeBlockItemList = [.init{b in b.useItem(.init(value))}]
             }
             let bodyItemListSyntax = SyntaxFactory.makeCodeBlockItemList(bodyCodeBlockItemList)
@@ -161,11 +110,11 @@ extension RequestParametersRequestConverterGenerator: Generator {
         }
     }
     func generate(_ part: Part) -> Syntax {
-        self.generate(part, options: self.options).raw()
+        self.generate(part).raw()
     }
     func generate(_ node: SourceFileSyntax) -> Syntax {
         guard !self.storedPropertiesList.isEmpty else { return .init(node) }
-        let result = self.generate(.function, options: self.options).raw()
+        let result = self.generate(.function).raw()
         return result
     }
 }
