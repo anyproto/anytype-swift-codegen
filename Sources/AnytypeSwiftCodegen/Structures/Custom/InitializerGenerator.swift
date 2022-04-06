@@ -1,67 +1,20 @@
 import SwiftSyntax
 
-// NOTE: Extract necessary fields for structure.
-// 1. Get structure full name.
-// 2. Create extension.
-// 3. Add initializer with extension.
-public class MemberwiseConvenientInitializerGenerator: SyntaxRewriter {
-    public private(set) var options: Options = .init()
-    open override func visit(_ syntax: SourceFileSyntax) -> Syntax {
-        .init(self.generate(syntax))
+public class InitializerGenerator: Generator {
+    public let scope: AccessLevelScope
+    
+    public init(scope: AccessLevelScope) {
+        self.scope = scope
     }
-}
 
-public extension MemberwiseConvenientInitializerGenerator {
-    struct Options {
-        var structuresNames: [String] = [] // will contain Request/Response.
-        var fieldsNames: [String] = [] // will contain unknownFields.
-        var shouldSkipComputedVariables: Bool = true
-        var shouldSkipUnknownTypeVariables: Bool = true
-        func hasStructuresNames() -> Bool { !structuresNames.isEmpty }
-        func hasFieldsNames() -> Bool { !fieldsNames.isEmpty }
-        var scopeOfInitializer = AccessLevelScope.public
-        var scopeOfExtension = AccessLevelScope.public
-    }
-}
-
-public extension MemberwiseConvenientInitializerGenerator {
-    func with(options: Options) -> Self {
-        self.options = options
-        return self
-    }
-    func with(scope: AccessLevelScope) -> Self {
-        self.options.scopeOfExtension = scope
-        self.options.scopeOfInitializer = scope
-        return self
-    }
-}
-
-// NOTE: Necessary fields definition
-// 1. Filtered Fields count > 0
-// 2. Fields has get and setter.
-private extension MemberwiseConvenientInitializerGenerator {
-    class NecessaryFieldsExtractor: SyntaxRewriter {
-        var storedPropertiesExtractor = StoredPropertiesExtractor()
-        
-        // MARK: Visits
-        open override func visit(_ syntax: StructDeclSyntax) -> DeclSyntax {
-            _ = self.storedPropertiesExtractor.visit(syntax)
-            return super.visit(syntax)
-        }
-    }
-}
-
-// TODO:
-// Rewrite when you can.
-extension MemberwiseConvenientInitializerGenerator: Generator {
     public func generate(_ node: SourceFileSyntax) -> Syntax {
-        let fieldsExtractor = NecessaryFieldsExtractor()
+        let fieldsExtractor = StoredPropertiesExtractor()
         _ = fieldsExtractor.visit(node)
         // we don't care about changing, we only need parsing variables.
         
         var items: [CodeBlockItemSyntax] = []
         
-        for (_, fields) in fieldsExtractor.storedPropertiesExtractor.extractedFields.sorted(by: { (lhs, rhs) -> Bool in
+        for (_, fields) in fieldsExtractor.extractedFields.sorted(by: { (lhs, rhs) -> Bool in
             lhs.key < rhs.key
         }) {
             let (structure, storedVariables) = fields
@@ -104,20 +57,23 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
             
             let singleLeadingTrivia: Trivia = [.spaces(4)] //[.tabs(1)]
             let doubleLeadingTrivia: Trivia = [.spaces(8)] //[.tabs(2)]
+            
             let body = CodeBlockSyntax { b in
                 b.useLeftBrace(SyntaxFactory.makeLeftBraceToken().withTrailingTrivia([.newlines(1)]))
                 for statement in statements {
                     b.addStatement(statement.withTrailingTrivia([.newlines(1)]).withLeadingTrivia(doubleLeadingTrivia))
                 }
-                b.useRightBrace(SyntaxFactory.makeRightBraceToken().withTrailingTrivia([.newlines(1)]).withLeadingTrivia(singleLeadingTrivia))
+                b.useRightBrace(
+                    SyntaxFactory.makeRightBraceToken()
+                        .withTrailingTrivia([.newlines(1)])
+                        .withLeadingTrivia(singleLeadingTrivia)
+                )
             }
 
-            let initializerTokenSyntax: TokenSyntax = SyntaxFactory.makeIdentifier("")//self.options.scopeOfExtension.isPublic ? SyntaxFactory.makePublicKeyword() : SyntaxFactory.makeInternalKeyword()
+            let initializerTokenSyntax = SyntaxFactory.makeIdentifier("")
             
             let initializerAttributesListSyntax = SyntaxFactory.makeAttributeList([
-                .init(initializerTokenSyntax
-                        .withLeadingTrivia(.newlines(1))
-                        // .withTrailingTrivia(.spaces(1))
+                .init(initializerTokenSyntax.withLeadingTrivia(.newlines(1))
                 )
             ])
             
@@ -127,24 +83,51 @@ extension MemberwiseConvenientInitializerGenerator: Generator {
                 .init{b in b.useDecl(.init(initializer.withLeadingTrivia(singleLeadingTrivia)))}
             ])
             
-            let membersDeclSyntax = SyntaxFactory.makeMemberDeclBlock(leftBrace: SyntaxFactory.makeLeftBraceToken(leadingTrivia: [.spaces(1)], trailingTrivia: [.newlines(1)]), members: memberDeclList, rightBrace: SyntaxFactory.makeRightBraceToken(leadingTrivia: [.newlines(0)]))
+            let membersDeclSyntax = SyntaxFactory.makeMemberDeclBlock(
+                leftBrace: SyntaxFactory.makeLeftBraceToken(
+                    leadingTrivia: [.spaces(1)],
+                    trailingTrivia: [.newlines(1)]
+                ),
+                members: memberDeclList,
+                rightBrace: SyntaxFactory.makeRightBraceToken(leadingTrivia: [.newlines(0)])
+            )
             
-            let extensionTokenSyntax = options.scopeOfExtension.token
+            let extensionTokenSyntax = scope.token
             
             let extensionAttributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(extensionTokenSyntax.withTrailingTrivia(.spaces(1)))
             ])
             
-            let extensionDeclSyntax = SyntaxFactory.makeExtensionDecl(attributes: extensionAttributesListSyntax, modifiers: nil, extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)), extendedType: structure, inheritanceClause: nil, genericWhereClause: nil, members: membersDeclSyntax)
+            let extensionDeclSyntax = SyntaxFactory.makeExtensionDecl(
+                attributes: extensionAttributesListSyntax,
+                modifiers: nil,
+                extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)),
+                extendedType: structure,
+                inheritanceClause: nil,
+                genericWhereClause: nil,
+                members: membersDeclSyntax
+            )
             
-            let newItem = SyntaxFactory.makeCodeBlockItem(item: .init(extensionDeclSyntax), semicolon: nil, errorTokens: nil).withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1))
+            let newItem = SyntaxFactory.makeCodeBlockItem(
+                item: .init(extensionDeclSyntax),
+                semicolon: nil,
+                errorTokens: nil
+            )
+                .withLeadingTrivia(.newlines(1))
+                .withTrailingTrivia(.newlines(1))
+            
             items.append(newItem)
         }
         
         if items.isEmpty {
-            return .init(SyntaxFactory.makeBlankSourceFile())
+            return .blank
         }
                 
-        return .init(SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList(items), eofToken: SyntaxFactory.makeToken(.eof, presence: .present)))
+        return Syntax(
+            SyntaxFactory.makeSourceFile(
+                statements: SyntaxFactory.makeCodeBlockItemList(items),
+                eofToken: SyntaxFactory.makeToken(.eof, presence: .present)
+            )
+        )
     }
 }
