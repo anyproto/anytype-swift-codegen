@@ -1,5 +1,5 @@
 //
-//  ErrorProtocolAdoptionGeneratorTests.swift
+//  ErrorProtocolGeneratorTests.swift
 //  
 //
 //  Created by Dmitry Lobanov on 23.01.2020.
@@ -8,7 +8,7 @@
 import XCTest
 @testable import AnytypeSwiftCodegen
 
-final class ErrorProtocolAdoptionGeneratorTests: XCTestCase
+final class ErrorProtocolGeneratorTests: XCTestCase
 {
     func test_basic() throws
     {
@@ -33,7 +33,7 @@ final class ErrorProtocolAdoptionGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ErrorProtocolAdoptionGenerator()
+            using: ErrorProtocolGenerator()
         )
     }
 }
