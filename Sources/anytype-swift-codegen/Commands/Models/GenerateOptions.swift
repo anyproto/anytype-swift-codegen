@@ -7,7 +7,6 @@ extension GenerateCommand {
         let outputFilePath: String
         let transform: String
         let templateFilePath: String
-        let commentsHeaderFilePath: String
         let importsFilePath: String
         let serviceFilePath: String
         
@@ -19,7 +18,6 @@ extension GenerateCommand {
                 <*> m <| Option(key: "outputFilePath", defaultValue: defaultStringValue, usage: "Use with flag --filePath. It will output to this file")
                 <*> m <| Option(key: "transform", defaultValue: "", usage: "Transform with name or shortcut.")
                 <*> m <| Option(key: "templateFilePath", defaultValue: defaultStringValue, usage: "Template file that should be used in some transforms")
-                <*> m <| Option(key: "commentsHeaderFilePath", defaultValue: defaultStringValue, usage: "Comments header file that will be included at top")
                 <*> m <| Option(key: "importsFilePath", defaultValue: defaultStringValue, usage: "Import file that will be included at top after comments if presented")
                 <*> m <| Option(key: "serviceFilePath", defaultValue: defaultStringValue, usage: "Rpc service file that contains Rpc services descriptions in .proto (protobuffers) format.")
         }
