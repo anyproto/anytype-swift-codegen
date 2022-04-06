@@ -5,7 +5,9 @@ import SwiftSyntax
 let registry: CommandRegistry<Swift.Error> = {
     let registry = CommandRegistry<Swift.Error>()
     registry.register(HelpCommand(registry: registry))
-    registry.register(GenerateCommand())
+    registry.register(GenerateServiceCommand())
+    registry.register(GenerateInitializersCommand())
+    registry.register(GenerateErrorAdoptionCommand())
     return registry
 }()
 
