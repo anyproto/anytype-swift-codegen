@@ -21,7 +21,7 @@ func runTest<T>(
     function: String = #function,
     line: UInt = #line
     ) throws
-    where T: SyntaxRewriter
+    where T: Generator
 {
     /// Tweak special characters.
     func tweak(_ string: String) -> String
@@ -31,7 +31,7 @@ func runTest<T>(
 
     let syntax = try parseString(tweak(source))
 
-    let result = generator.visit(syntax).description
+    let result = generator.generate(syntax).description
 
     let diffString = Diffing<String>.lines.diff(tweak(expected), result)?.0
 

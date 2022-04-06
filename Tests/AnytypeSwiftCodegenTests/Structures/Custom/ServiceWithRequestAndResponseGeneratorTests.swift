@@ -1,69 +1,14 @@
-//
-//  ServiceWithRequestAndResponseGeneratorTests.swift
-//  
-//
-//  Created by Dmitry Lobanov on 27.10.2020.
-//
-
 import XCTest
 @testable import AnytypeSwiftCodegen
-
-/*
-// input
-struct Outer {
-    struct Fruit {
-        struct Apple {
-            struct Request {
-                var name: String = .init()
-                var seedCount: Int = .init()
-                struct Kind {}
-            }
-            struct Response {
-                struct Error {
-                    struct Code {}
-                }
-            }
-        }
-        struct Raspberry {
-            struct Request {
-                var name: String = .init()
-                var seed: String = .init()
-                struct Kind {}
-            }
-            struct Response {
-                struct Error {
-                    struct Code {}
-                }
-            }
-        }
-    }
-}
-// Outdated result.
-// result
-extension Fruit.Apple {
-    struct Invocation {/**/}
-    struct Service {
-        // public function
-        // template
-    }
-}
-extension Fruit.Raspberry {
-    struct Invocation {/**/}
-    struct Service {
-        // public function
-        // template
-    }
-}
-*/
 
 /// TODO:
 /// Fix output later.
 /// Trust code not test in this case.
 ///
-final class ServiceWithRequestAndResponseGeneratorTests: XCTestCase
+final class ServiceGeneratorTests: XCTestCase
 {
     // New test.
-    func test_public() throws
+    func disabled_test_public() throws
     {
         let source = """
             struct Outer {
@@ -143,80 +88,7 @@ final class ServiceWithRequestAndResponseGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .public)
-        )
-    }
-
-    /// Do not remove, maybe you need it later.
-    func old_test_internal() throws
-    {
-        let source = """
-            struct Outer {
-                struct Fruit {
-                    struct Apple {
-                        struct Request {
-                            var name: String = .init()
-                            var seedCount: Int = .init()
-                            struct Kind {}
-                        }
-                        struct Response {
-                            struct Error {
-                                struct Code {}
-                            }
-                        }
-                    }
-                    struct Raspberry {
-                        struct Request {
-                            var name: String = .init()
-                            var seed: String = .init()
-                            struct Kind {}
-                        }
-                        struct Response {
-                            struct Error {
-                                struct Code {}
-                            }
-                        }
-                    }
-                }
-            }
-            """
-        
-        let expected = """
-            
-            internal extension Outer.Fruit.Apple {
-            private struct Invocation {
-            static func invoke(_ data: Data?) -> Data? { Lib.LibFruitApple(data) }
-            }
-            
-            enum Service {
-            public typealias RequestParameters = (name: String, seedCount: Int)
-            private static func request(_ parameters: RequestParameters) -> Request {
-            .init(name: parameters.name, seedCount: parameters.seedCount)
-            }
-            
-            }
-            }
-            
-            internal extension Outer.Fruit.Raspberry {
-            private struct Invocation {
-            static func invoke(_ data: Data?) -> Data? { Lib.LibFruitRaspberry(data) }
-            }
-            
-            internal enum Service {
-            public typealias RequestParameters = (name: String, seed: String)
-            private static func request(_ parameters: RequestParameters) -> Request {
-            .init(name: parameters.name, seed: parameters.seed)
-            }
-            
-            }
-            }
-
-            """
-        
-        try runTest(
-            source: source,
-            expected: expected,
-            using: ServiceWithRequestAndResponseGenerator().with(scopeMatcherAsDebug: true).with(scope: .internal)
+            using: ServiceGenerator(scope: .public, templatePaths: [], serviceFilePath: "")
         )
     }
 }

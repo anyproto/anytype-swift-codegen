@@ -5,8 +5,7 @@ import Files
 import SwiftSyntax
 import AnytypeSwiftCodegen
 
-struct GenerateCommand: CommandProtocol
-{
+struct GenerateCommand: CommandProtocol {
     let verb = "generate"
     let function = "Apply source transform and output it to different file."
 
@@ -24,7 +23,7 @@ struct GenerateCommand: CommandProtocol
         }
 
         if let source = try? File(path: options.filePath), let target = try? File(path: options.outputFilePath) {
-            try self.processTransform(source: source, target: target, options: options)
+            try processTransform(source: source, target: target, options: options)
         }
         
     }
@@ -38,11 +37,11 @@ struct GenerateCommand: CommandProtocol
             throw Error.fileShouldHaveExtension(target.path, .swiftExtension)
         }
         
-        guard let transform = Transform.create(options.transform) else {
+        guard let transform = Transform(rawValue: options.transform) else {
             throw Error.transformDoesntExist(options.transform)
         }
          
-        if [.serviceWithRequestAndResponse].contains(transform) {
+        if .serviceWithRequestAndResponse == transform {
             guard let serviceFile = try? File(path: options.serviceFilePath) else {
                 throw Error.serviceFileNotExists(options.serviceFilePath)
             }
@@ -52,12 +51,30 @@ struct GenerateCommand: CommandProtocol
         }
         
         let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: source.path))
-        let result = transform.transform(options: options)(sourceFile)
+        let result = transform.transform(options: options, source: sourceFile)
         
         print("Processing source file -> \(source.path) ")
         print("Output to file -> \(target.path)")
-        let optionalHeader = [options.commentsHeaderFilePath, options.importsFilePath].compactMap{try? File(path: $0).readAsString()}.joined(separator: "\n\n")
-        let output = [optionalHeader, result.description].joined(separator: "\n")
+        
+        
+        let output = [generateHeader(options: options), result.description].joined(separator: "\n")
         try target.write(output)
+    }
+    
+    private func generateHeader(options: Options) -> String {
+        let headerComments = """
+// DO NOT EDIT
+//
+// Generated automatically by the AnytypeSwiftCodegen.
+//
+// For more info see:
+// https://github.com/anytypeio/anytype-swift-codegen
+"""
+        
+        guard let imports = try? File(path: options.importsFilePath).readAsString() else {
+            return headerComments
+        }
+        
+        return [headerComments, imports].joined(separator: "\n\n")
     }
 }
