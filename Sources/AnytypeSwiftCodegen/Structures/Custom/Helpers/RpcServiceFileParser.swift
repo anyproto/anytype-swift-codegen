@@ -1,12 +1,6 @@
 import Foundation
 import SwiftSyntax
 
-struct Endpoint {
-    let name: String
-    let request: String
-    let response: String
-}
-
 class RpcServiceFileParser {    
     private let endpointFormat = try! NSRegularExpression(
         pattern: "rpc\\s+(?<name>\\w+)\\s+\\((?<request>[^\\(\\)]+)\\)\\s+returns\\s+\\((?<response>[^\\(\\)]+)\\)"
