@@ -5,8 +5,7 @@ import Files
 import SwiftSyntax
 import AnytypeSwiftCodegen
 
-struct GenerateCommand: CommandProtocol
-{
+struct GenerateCommand: CommandProtocol {
     let verb = "generate"
     let function = "Apply source transform and output it to different file."
 
@@ -57,14 +56,25 @@ struct GenerateCommand: CommandProtocol
         print("Processing source file -> \(source.path) ")
         print("Output to file -> \(target.path)")
         
-        let optionalHeader = [
-            options.commentsHeaderFilePath,
-            options.importsFilePath
-        ].compactMap{
-            try? File(path: $0).readAsString()
-        }.joined(separator: "\n\n")
         
-        let output = [optionalHeader, result.description].joined(separator: "\n")
+        let output = [generateHeader(options: options), result.description].joined(separator: "\n")
         try target.write(output)
+    }
+    
+    private func generateHeader(options: Options) -> String {
+        let headerComments = """
+// DO NOT EDIT
+//
+// Generated automatically by the AnytypeSwiftCodegen.
+//
+// For more info see:
+// https://github.com/anytypeio/anytype-swift-codegen
+"""
+        
+        guard let imports = try? File(path: options.importsFilePath).readAsString() else {
+            return headerComments
+        }
+        
+        return [headerComments, imports].joined(separator: "\n\n")
     }
 }
