@@ -88,7 +88,7 @@ final class ServiceGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceGenerator()
+            using: ServiceGenerator(scope: .public, templatePaths: [], serviceFilePath: "")
         )
     }
 }
