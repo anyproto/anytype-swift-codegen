@@ -1,6 +1,6 @@
 import SwiftSyntax
 
-public class ErrorProtocolAdoptionGenerator: Generator {    
+public class ErrorProtocolGenerator: Generator {
     private let adoptedProtocolTypeIdentifier: String = "Swift.Error"
     private let scanner = NestedTypesScanner()
     

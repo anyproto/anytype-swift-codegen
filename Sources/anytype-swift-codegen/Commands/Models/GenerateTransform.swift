@@ -10,13 +10,14 @@ extension GenerateCommand {
         func transform(options: Options, source: SourceFileSyntax) -> Syntax {
             switch self {
             case .errorAdoption:
-                return ErrorProtocolAdoptionGenerator()
+                return ErrorProtocolGenerator()
                     .generate(source)
             case .memberwiseInitializer:
-                return MemberwiseConvenientInitializerGenerator()
+                return InitializerGenerator(scope: .public)
                     .generate(source)
             case .serviceWithRequestAndResponse:
                 return ServiceGenerator(
+                    scope: .public,
                     templatePaths: [options.templateFilePath],
                     serviceFilePath: options.serviceFilePath
                 )
