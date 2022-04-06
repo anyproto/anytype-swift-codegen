@@ -1,31 +1,3 @@
-//
-//  InitializerGeneratorTests.swift
-//  
-//
-//  Created by Dmitry Lobanov on 22.01.2020.
-//
-
-//struct Response {
-//    typealias Error = Int
-//    var internalError: Error = 0
-//    var error: Error {
-//      get {return 0}
-//      set {theError = newValue}
-//    }
-//    /// Returns true if `error` has been explicitly set.
-//    var hasError: Bool {return "" != nil}
-//    /// Clears the value of `error`. Subsequent reads from it will return its default value.
-//    mutating func clearError() { nil }
-//
-//    var unknownFields: [String]
-//}
-//
-//extension Response {
-//    init(internalError: Error, error: Error) {
-//        self.internalError = internalError
-//        self.error = error
-//    }
-//}
 import XCTest
 @testable import AnytypeSwiftCodegen
 
@@ -45,7 +17,7 @@ final class InitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator()
+            using: InitializerGenerator(scope: .public)
         )
     }
 
@@ -79,7 +51,7 @@ final class InitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator().with(scope: .public)
+            using: InitializerGenerator(scope: .public)
         )
     }
 
@@ -113,7 +85,7 @@ final class InitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator().with(scope: .internal)
+            using: InitializerGenerator(scope: .internal)
         )
     }
 }

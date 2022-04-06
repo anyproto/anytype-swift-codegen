@@ -13,7 +13,7 @@ extension GenerateCommand {
                 return ErrorProtocolGenerator()
                     .generate(source)
             case .memberwiseInitializer:
-                return InitializerGenerator()
+                return InitializerGenerator(scope: .public)
                     .generate(source)
             case .serviceWithRequestAndResponse:
                 return ServiceGenerator(
