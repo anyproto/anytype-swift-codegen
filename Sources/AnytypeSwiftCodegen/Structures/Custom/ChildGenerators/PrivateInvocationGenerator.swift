@@ -136,9 +136,12 @@ class PrivateInvocationGenerator: SyntaxRewriter {
 extension PrivateInvocationGenerator: Generator {
     func generate(_ node: SourceFileSyntax) -> Syntax {
         let syntax = self.generate(part: .structure, options: self.options).raw()
-        let result = SyntaxFactory.makeSourceFile(statements: SyntaxFactory.makeCodeBlockItemList([
-            .init {b in b.useItem(syntax)}
-        ]), eofToken: SyntaxFactory.makeToken(.eof, presence: .present))
+        let result = SyntaxFactory.makeSourceFile(
+            statements: SyntaxFactory.makeCodeBlockItemList([
+                .init {b in b.useItem(syntax)}
+            ]),
+            eofToken: SyntaxFactory.makeToken(.eof, presence: .present)
+        )
         return .init(result)
     }
 }

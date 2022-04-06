@@ -1,36 +1,21 @@
 import SwiftSyntax
 
 public class ErrorProtocolGenerator: Generator {
-    private let adoptedProtocolTypeIdentifier: String = "Swift.Error"
-    private let scanner = NestedTypesScanner()
-    
     public init() { }
     
     public func generate(_ node: SourceFileSyntax) -> Syntax {
-        let statements = node.statements
-            .compactMap{ $0.item.asProtocol(DeclSyntaxProtocol.self) }
-            .compactMap(search)
-            .flatMap{$0}
+        let statements = NestedTypesScanner().scan(node)
+            .flatMap(findAllErrors)
             .map(generate)
-            .map(Syntax.init)
-            .compactMap { syntax in
-                CodeBlockItemSyntax { builder in builder.useItem(syntax) }
-            }
         
-        let result = SyntaxFactory
-            .makeSourceFile(
-                statements: SyntaxFactory.makeCodeBlockItemList(statements),
-                eofToken: SyntaxFactory.makeToken(.eof, presence: .present)
-            )
-        
-        return Syntax(result)
+        return SyntaxFactory.makeSourceFile(statements).asSyntax
     }
     
     // MARK: - Private
-    private func generate(_ item: DeclarationNotation) -> ExtensionDeclSyntax {
+    private func generate(_ item: DeclarationNotation) -> CodeBlockItemSyntax {
         let extendedType = item.fullIdentifier
         let extendedTypeSyntax = SyntaxFactory.makeTypeIdentifier(extendedType)
-        let inheritanceType = adoptedProtocolTypeIdentifier
+        let inheritanceType = "Swift.Error"
         let inheritanceTypeSyntax = SyntaxFactory.makeTypeIdentifier(inheritanceType)
         let inheritedTypeListSyntax = SyntaxFactory.makeInheritedTypeList(
             [
@@ -50,7 +35,7 @@ public class ErrorProtocolGenerator: Generator {
             rightBrace: SyntaxFactory.makeRightBraceToken().withTrailingTrivia(.newlines(1))
         
         )
-        return SyntaxFactory.makeExtensionDecl(
+        let declaration = SyntaxFactory.makeExtensionDecl(
             attributes: nil,
             modifiers: nil,
             extensionKeyword: SyntaxFactory.makeExtensionKeyword().withTrailingTrivia(.spaces(1)),
@@ -59,27 +44,17 @@ public class ErrorProtocolGenerator: Generator {
             genericWhereClause: nil,
             members: memberDeclBlockSyntax.withLeadingTrivia(.spaces(1))
         )
+ 
+        return CodeBlockItemSyntax { builder in builder.useItem(Syntax(declaration)) }
     }
     
-    private func match(_ declaration: DeclarationNotation) -> DeclarationNotation? {
+    private func findAllErrors(_ declaration: DeclarationNotation) -> [DeclarationNotation] {
+        let nested = declaration.declarations.flatMap{ findAllErrors($0) }
+        
         if declaration.identifier == "Error" {
-            return declaration
+            return [declaration] + nested
+        } else {
+            return nested
         }
-        else {
-            return nil
-        }
-    }
-    
-    private func search(_ declaration: DeclarationNotation) -> [DeclarationNotation] {
-        let a = [ match(declaration) ].compactMap{$0}
-        let b = declaration.declarations.flatMap{ search($0) }
-        
-        return a + b
-    }
-
-    private func search(_ syntax: DeclSyntaxProtocol) -> [DeclarationNotation] {
-        guard let declaration = scanner.scan(syntax) else { return [] }
-        
-        return search(declaration)
     }
 }
