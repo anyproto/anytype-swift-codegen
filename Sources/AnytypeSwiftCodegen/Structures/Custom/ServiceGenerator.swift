@@ -5,7 +5,7 @@ public class ServiceGenerator {
     private let responseName: String = "Response"
     
     private let scope: AccessLevelScope
-    private let templatePaths: [String]
+    private let templatePath: String
     private let serviceFilePath: String
     
     private let scopeMatcher = ScopeMatcher(threshold: 8) // size of scope name + 1.
@@ -19,9 +19,9 @@ public class ServiceGenerator {
     private let storedPropertiesExtractor = StoredPropertiesExtractor()
     
     
-    public init(scope: AccessLevelScope, templatePaths: [String], serviceFilePath: String) {
+    public init(scope: AccessLevelScope, templatePath: String, serviceFilePath: String) {
         self.scope = scope
-        self.templatePaths = templatePaths
+        self.templatePath = templatePath
         self.serviceFilePath = serviceFilePath
     }
     
@@ -96,14 +96,15 @@ extension ServiceGenerator: Generator {
     }
     
     private func generateTemplate() -> [DeclSyntax] {
-        if let result = templatePaths.first
-            .flatMap(templateGenerator.generate)
-            .flatMap(SourceFileSyntax.init) {
-            return result.statements
-                .compactMap{$0.item.asProtocol(DeclSyntaxProtocol.self)?._syntaxNode}
-                .compactMap(DeclSyntax.init)
+        guard let result = templateGenerator
+                .generate(templatePath)
+                .flatMap(SourceFileSyntax.init) else {
+            return []
         }
-        return []
+ 
+        return result.statements
+            .compactMap{ $0.item.asProtocol(DeclSyntaxProtocol.self)?._syntaxNode }
+            .compactMap(DeclSyntax.init)
     }
     
     private func generateService(serviceName: String, scope: ServiceData) -> Syntax {

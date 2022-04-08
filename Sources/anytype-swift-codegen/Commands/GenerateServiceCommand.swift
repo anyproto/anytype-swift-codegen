@@ -44,7 +44,7 @@ struct GenerateServiceCommand: CommandProtocol {
         let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: source.path))
         let result = ServiceGenerator(
             scope: .public,
-            templatePaths: [options.templateFilePath],
+            templatePath: options.templateFilePath,
             serviceFilePath: options.serviceFilePath
         )
         .generate(sourceFile)

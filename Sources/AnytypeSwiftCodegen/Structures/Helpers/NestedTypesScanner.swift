@@ -8,7 +8,7 @@ class NestedTypesScanner {
         }.compactMap(scan)
     }
     
-    func scan(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
+    private func scan(_ declaration: DeclSyntaxProtocol) -> DeclarationNotation? {
         switch declaration {
         case let value as StructDeclSyntax:
             return DeclarationNotation(
