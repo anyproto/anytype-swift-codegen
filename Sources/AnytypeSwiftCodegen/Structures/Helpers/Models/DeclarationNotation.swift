@@ -25,12 +25,13 @@ struct DeclarationNotation: CustomStringConvertible {
     }
     
     var fullIdentifier: String {
-        switch self.syntax {
-        case let value as StructDeclSyntax:
-            return value.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
-        case let value as EnumDeclSyntax:
-            return value.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch syntax {
+        case let structSyntax as StructDeclSyntax:
+            return structSyntax.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        case let enumSyntax as EnumDeclSyntax:
+            return enumSyntax.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
         default:
+            assertionFailure()
             return ""
         }
     }
