@@ -30,7 +30,7 @@ let package = Package(
             dependencies: ["AnytypeSwiftCodegen", "Commandant", "Curry", "Files"]),
         .target(
             name: "AnytypeSwiftCodegen",
-            dependencies: ["SwiftSyntax"]),
+            dependencies: ["SwiftSyntax", .product(name: "SwiftSyntaxParser", package: "SwiftSyntax")]),
         .testTarget(
             name: "AnytypeSwiftCodegenTests",
             dependencies: ["AnytypeSwiftCodegen", "SnapshotTesting"]),

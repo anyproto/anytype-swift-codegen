@@ -1,5 +1,6 @@
 import Foundation
 import SwiftSyntax
+import SwiftSyntaxParser
 
 class TemplateGenerator: SyntaxRewriter {
     override init() {}
