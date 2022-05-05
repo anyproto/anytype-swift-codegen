@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftSyntax
-import SwiftSyntaxParser
 import XCTest
 import SnapshotTesting
 @testable import AnytypeSwiftCodegen
