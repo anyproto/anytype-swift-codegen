@@ -3,7 +3,6 @@ import Curry
 import Commandant
 import Files
 import SwiftSyntax
-import SwiftSyntaxParser
 import AnytypeSwiftCodegen
 
 extension GenerateInitializersCommand {
