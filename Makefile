@@ -1,11 +1,13 @@
 .DEFAULT_GOAL := release
+RELEASE_BIN_FOLDER := $(shell xcrun swift build -c release --arch x86_64 --show-bin-path)
 
 clean-release: clean artifacts-clean release
 
 release: build-release build-dependency-swift-format
 	echo "Gathering tools in ./release"
-	@cp ./.build/apple/Products/Release/anytype-swift-codegen ./release
-	@cp ./.build/apple/Products/Release/swift-format ./release
+	@mkdir -p ./release
+	@cp $(RELEASE_BIN_FOLDER)/anytype-swift-codegen ./release/anytype-swift-codegen
+	@cp $(RELEASE_BIN_FOLDER)/swift-format ./release
 	@open ./release
 
 test:
