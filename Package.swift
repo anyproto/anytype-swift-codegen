@@ -1,4 +1,4 @@
-// swift-tools-version:5.4
+// swift-tools-version:5.6
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -15,12 +15,12 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(name: "SwiftSyntax", url: "https://github.com/apple/swift-syntax.git", .exact("0.50500.0")),
-        .package(url: "https://github.com/apple/swift-format.git", from: "0.50500.0"),
-        .package(url: "https://github.com/Carthage/Commandant.git", from: "0.17.0"),
-        .package(url: "https://github.com/thoughtbot/Curry.git", from: "4.0.2"),
-        .package(url: "https://github.com/JohnSundell/Files.git", from: "4.1.1"),
-        .package(name: "SnapshotTesting", url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-syntax", branch: "0.50600.1"),
+        .package(url: "https://github.com/apple/swift-format", from: "0.50600.1"),
+        .package(url: "https://github.com/Carthage/Commandant", from: "0.17.0"),
+        .package(url: "https://github.com/thoughtbot/Curry", from: "4.0.2"),
+        .package(url: "https://github.com/JohnSundell/Files", from: "4.1.1"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -30,9 +30,15 @@ let package = Package(
             dependencies: ["AnytypeSwiftCodegen", "Commandant", "Curry", "Files"]),
         .target(
             name: "AnytypeSwiftCodegen",
-            dependencies: ["SwiftSyntax"]),
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxParser", package: "swift-syntax")
+            ]),
         .testTarget(
             name: "AnytypeSwiftCodegenTests",
-            dependencies: ["AnytypeSwiftCodegen", "SnapshotTesting"]),
+            dependencies: [
+                "AnytypeSwiftCodegen",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ]),
     ]
 )
