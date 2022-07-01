@@ -61,43 +61,26 @@ extension RequestParametersRequestConverterGenerator: Generator {
             return .initializer(.init(simpleVariable))
                     
         case .function:
-            let returnTypeSyntax = SyntaxFactory.makeTypeIdentifier(resultType)
             let privateKeyword = SyntaxFactory.makePrivateKeyword()
             let staticKeyword = SyntaxFactory.makeStaticKeyword()
             let functionKeyword = SyntaxFactory.makeFuncKeyword()
             let functionNameSyntax = SyntaxFactory.makeIdentifier(functionName)
-            let namesAndTypes = [(self.functionArgumentName, self.functionArgumentType)]
             
-            let parametersList: [FunctionParameterSyntax] = namesAndTypes.compactMap { (name, type) in
-                FunctionParameterSyntax.init{ b in
-                    b.useFirstName(SyntaxFactory.makeWildcardKeyword().withTrailingTrivia(.spaces(1)))
-                    b.useSecondName(SyntaxFactory.makeIdentifier(name))
-                    b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                    b.useType(SyntaxFactory.makeTypeIdentifier(type))
-                    if name != namesAndTypes.last?.0 {
-                        b.useTrailingComma(SyntaxFactory.makeCommaToken().withTrailingTrivia(.spaces(1)))
-                    }
-                }
-            }
-            
-            let parametersListSyntax = SyntaxFactory.makeFunctionParameterList(parametersList)
-            
-            let parameterClauseSyntax = SyntaxFactory.makeParameterClause(leftParen: SyntaxFactory.makeLeftParenToken(), parameterList: parametersListSyntax, rightParen: SyntaxFactory.makeRightParenToken())
-            
-            let returnClauseSyntax = SyntaxFactory.makeReturnClause(arrow: SyntaxFactory.makeArrowToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)), returnType: returnTypeSyntax)
-            
-            let functionSignatureSyntax = FunctionSignatureSyntax.init{
-                b in
-                b.useInput(parameterClauseSyntax)
-                b.useOutput(returnClauseSyntax)
-            }
+            let args = [
+                Argument(
+                    name: SyntaxFactory.makeWildcardKeyword().description,
+                    internalName: functionArgumentName,
+                    type: functionArgumentType
+                )
+            ]
+
+            let functionSignatureSyntax = FunctionSignatureGenerator().generate(args: args, returnType: resultType)
                         
             let attributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(privateKeyword.withTrailingTrivia(.spaces(1))),
                 .init(staticKeyword.withTrailingTrivia(.spaces(1)))
             ])
             
-             
             var bodyCodeBlockItemList: [CodeBlockItemSyntax] = []
             if case let .initializer(value) = generate(.initializer) {
                 bodyCodeBlockItemList = [.init{b in b.useItem(.init(value))}]

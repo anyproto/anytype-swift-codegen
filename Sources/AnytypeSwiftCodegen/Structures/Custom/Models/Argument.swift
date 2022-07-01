@@ -3,11 +3,13 @@ import SwiftSyntax
 
 struct Argument {
     let name: String
+    let internalName: String?
     let type: String
     let defaultValue: String?
     
-    init(name: String, type: String, defaultValue: String? = nil) {
+    init(name: String, internalName: String? = nil, type: String, defaultValue: String? = nil) {
         self.name = name
+        self.internalName = internalName
         self.type = type
         self.defaultValue = defaultValue
     }

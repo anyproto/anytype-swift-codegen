@@ -8,12 +8,16 @@ class FunctionParametersGenerator {
     func generate(args: [Argument]) -> [FunctionParameterSyntax] {
         let parameterList: [FunctionParameterSyntax] = args.compactMap { arg in
             FunctionParameterSyntax { b in
-                b.useFirstName(SyntaxFactory.makeIdentifier(arg.name))
+                
+                if let internalName = arg.internalName {
+                    b.useFirstName(SyntaxFactory.makeIdentifier(arg.name).withTrailingTrivia(.spaces(1)))
+                    b.useSecondName(SyntaxFactory.makeIdentifier(internalName))
+                } else {
+                    b.useFirstName(SyntaxFactory.makeIdentifier(arg.name))
+                }
+                
                 b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
                 b.useType(SyntaxFactory.makeTypeIdentifier(arg.type))
-                if arg.name != args.last?.name  {
-                    b.useTrailingComma(SyntaxFactory.makeCommaToken().withTrailingTrivia(.spaces(1)))
-                }
                 
                 if let defaultValue = arg.defaultValue {
                     let lastParameterDefaultArgumentSyntax = InitializerClauseSyntax { (b) in

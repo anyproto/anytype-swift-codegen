@@ -82,17 +82,14 @@ class PrivateInvocationGenerator: SyntaxRewriter {
                 .init {b in b.useItem(invocationSyntax)}
             ])
             let bodyCodeBlockSyntax = SyntaxFactory.makeCodeBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)), statements: bodySyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.spaces(1)))
-            let functionParameterListSyntax = SyntaxFactory.makeFunctionParameterList([
-                .init {b in
-                    b.useFirstName(SyntaxFactory.makeWildcardKeyword().withTrailingTrivia(.spaces(1)))
-                    b.useSecondName(SyntaxFactory.makeIdentifier(parameterName))
-                    b.useType(SyntaxFactory.makeTypeIdentifier(parameterType))
-                    b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                }
-            ])
-            let parameterClauseSyntax = SyntaxFactory.makeParameterClause(leftParen: SyntaxFactory.makeLeftParenToken(), parameterList: functionParameterListSyntax, rightParen: SyntaxFactory.makeRightParenToken())
-            let returnClauseSyntax = SyntaxFactory.makeReturnClause(arrow: SyntaxFactory.makeArrowToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)), returnType: SyntaxFactory.makeTypeIdentifier(functionReturnType))
-            let functionSignatureSyntax = SyntaxFactory.makeFunctionSignature(input: parameterClauseSyntax, asyncOrReasyncKeyword: nil, throwsOrRethrowsKeyword: nil, output: returnClauseSyntax)
+            
+            let args = [Argument(
+                name: SyntaxFactory.makeWildcardKeyword().description,
+                internalName: parameterName,
+                type: parameterType
+            )]
+            
+            let functionSignatureSyntax = FunctionSignatureGenerator().generate(args: args, returnType: functionReturnType)
             
             let attributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(staticKeywordSyntax.withTrailingTrivia(.spaces(1)))

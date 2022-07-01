@@ -109,25 +109,12 @@ extension PublicInvocationReturningResultGenerator: Generator {
             return .invocation(.init(functionInvocationSyntax))
             
         case .function:
-            let returnTypeSyntax = SyntaxFactory.makeTypeIdentifier(options.resultType)
             let publicKeyword = SyntaxFactory.makePublicKeyword()
             let staticKeyword = SyntaxFactory.makeStaticKeyword()
             let functionKeyword = SyntaxFactory.makeFuncKeyword()
             let functionNameSyntax = SyntaxFactory.makeIdentifier(options.functionName)
-                        
-            let parameterList = FunctionParametersGenerator().generate(args: storedPropertiesList)
             
-            let parametersListSyntax = SyntaxFactory.makeFunctionParameterList(parameterList)
-            
-            let parameterClauseSyntax = SyntaxFactory.makeParameterClause(leftParen: SyntaxFactory.makeLeftParenToken(), parameterList: parametersListSyntax, rightParen: SyntaxFactory.makeRightParenToken())
-            
-            let returnClauseSyntax = SyntaxFactory.makeReturnClause(arrow: SyntaxFactory.makeArrowToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.spaces(1)), returnType: returnTypeSyntax)
-            
-            let functionSignatureSyntax = FunctionSignatureSyntax.init{
-                b in
-                b.useInput(parameterClauseSyntax)
-                b.useOutput(returnClauseSyntax)
-            }
+            let functionSignatureSyntax = FunctionSignatureGenerator().generate(args: storedPropertiesList, returnType: options.resultType)
             
             let attributesListSyntax = SyntaxFactory.makeAttributeList([
                 .init(publicKeyword.withTrailingTrivia(.spaces(1))),
