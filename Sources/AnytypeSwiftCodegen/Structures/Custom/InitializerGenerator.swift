@@ -22,7 +22,7 @@ public class InitializerGenerator: Generator {
             
             let args = storedVariables.map { Argument.init(from: $0) }
             
-            let functionParameters = FunctionParametersGenerator().generate(args: args)
+            let functionParameters = FunctionParametersGenerator.generate(args: args)
             
             let parameters = ParameterClauseSyntax { b in
                 b.useLeftParen(SyntaxFactory.makeLeftParenToken())

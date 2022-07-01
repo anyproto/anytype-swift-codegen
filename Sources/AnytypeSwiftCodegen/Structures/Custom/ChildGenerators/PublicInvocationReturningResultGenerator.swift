@@ -109,19 +109,6 @@ extension PublicInvocationReturningResultGenerator: Generator {
             return .invocation(.init(functionInvocationSyntax))
             
         case .function:
-            let publicKeyword = SyntaxFactory.makePublicKeyword()
-            let staticKeyword = SyntaxFactory.makeStaticKeyword()
-            let functionKeyword = SyntaxFactory.makeFuncKeyword()
-            let functionNameSyntax = SyntaxFactory.makeIdentifier(options.functionName)
-            
-            let functionSignatureSyntax = FunctionSignatureGenerator().generate(args: storedPropertiesList, returnType: options.resultType)
-            
-            let attributesListSyntax = SyntaxFactory.makeAttributeList([
-                .init(publicKeyword.withTrailingTrivia(.spaces(1))),
-                .init(staticKeyword.withTrailingTrivia(.spaces(1)))
-            ])
-            
-            
             var bodyCodeBlockItemList: [CodeBlockItemSyntax] = []
             if case let .invocation(value) = self.generate(.invocation, options: options) {
                 bodyCodeBlockItemList = [.init{b in b.useItem(.init(value))}]
@@ -129,7 +116,15 @@ extension PublicInvocationReturningResultGenerator: Generator {
             let bodyItemListSyntax = SyntaxFactory.makeCodeBlockItemList(bodyCodeBlockItemList)
             let bodyCodeBlockSyntax = SyntaxFactory.makeCodeBlock(leftBrace: SyntaxFactory.makeLeftBraceToken().withLeadingTrivia(.spaces(1)).withTrailingTrivia(.newlines(1)), statements: bodyItemListSyntax, rightBrace: SyntaxFactory.makeRightBraceToken().withLeadingTrivia(.newlines(1)).withTrailingTrivia(.newlines(1)))
             
-            let result = SyntaxFactory.makeFunctionDecl(attributes: attributesListSyntax, modifiers: nil, funcKeyword: functionKeyword.withTrailingTrivia(.spaces(1)), identifier: functionNameSyntax, genericParameterClause: nil, signature: functionSignatureSyntax, genericWhereClause: nil, body: bodyCodeBlockSyntax)
+            let result = FunctionDeclGenerator.generate(
+                accessLevel: .publicLevel,
+                staticFlag: true,
+                name: options.functionName,
+                args: storedPropertiesList,
+                returnType: options.resultType,
+                body: bodyCodeBlockSyntax
+            )
+            
             return .function(.init(result))
         }
     }

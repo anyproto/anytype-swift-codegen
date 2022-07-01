@@ -12,8 +12,6 @@ public class ServiceGenerator {
     private let nestedTypesScanner = NestedTypesScanner()
     private let templateGenerator = TemplateGenerator()
     
-    private let requestParametersTypealiasGenerator = RequestParametersTypealiasGenerator()
-    private let requestParametersRequestConverterGenerator = RequestParametersRequestConverterGenerator()
     private let publicInvocationWithQueue = PublicInvocationOnQueueReturningFutureGenerator()
     private let publicInvocationReturingResult = PublicInvocationReturningResultGenerator()
     private let storedPropertiesExtractor = StoredPropertiesExtractor()
@@ -68,15 +66,6 @@ extension ServiceGenerator: Generator {
             .flatMap(storedPropertiesExtractor.extract)
         let variables = properties?[structIdentifier]?.1
         
-        let typealiasDeclaration = variables
-            .flatMap { requestParametersTypealiasGenerator.with(variables: $0)}
-            .map { $0.generate(.typealias) }
-            .flatMap(DeclSyntax.init)
-            .flatMap { $0.withTrailingTrivia(.newlines(1)) }
-        let converterDeclaration = variables
-            .flatMap { requestParametersRequestConverterGenerator.with(variables: $0) }
-            .map { $0.generate(.function) }
-            .flatMap(DeclSyntax.init)
         let publicInvocationWithQueueDeclaration = variables
             .flatMap { publicInvocationWithQueue.with(variables: $0)}
             .map {$0.generate(.function)}
@@ -87,8 +76,6 @@ extension ServiceGenerator: Generator {
             .flatMap(DeclSyntax.init)
         
         let result = [
-            typealiasDeclaration,
-            converterDeclaration,
             publicInvocationWithQueueDeclaration,
             publicInvocationReturningResultDeclaration
         ].compactMap{$0}

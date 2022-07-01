@@ -1,11 +1,9 @@
 import Foundation
 import SwiftSyntax
 
-class FunctionParametersGenerator {
+enum FunctionParametersGenerator {
     
-    init() {}
-    
-    func generate(args: [Argument]) -> [FunctionParameterSyntax] {
+    static func generate(args: [Argument]) -> [FunctionParameterSyntax] {
         let parameterList: [FunctionParameterSyntax] = args.compactMap { arg in
             FunctionParameterSyntax { b in
                 

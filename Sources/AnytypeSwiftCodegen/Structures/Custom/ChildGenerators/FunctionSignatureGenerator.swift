@@ -1,15 +1,13 @@
 import Foundation
 import SwiftSyntax
 
-final class FunctionSignatureGenerator {
+enum FunctionSignatureGenerator {
     
-    init() {}
-    
-    func generate(args: [Argument], returnType: String) -> FunctionSignatureSyntax {
+    static func generate(args: [Argument], returnType: String) -> FunctionSignatureSyntax {
         
         let returnTypeSyntax = SyntaxFactory.makeTypeIdentifier(returnType)
         
-        let parameterList = FunctionParametersGenerator().generate(args: args)
+        let parameterList = FunctionParametersGenerator.generate(args: args)
         
         let parametersListSyntax = SyntaxFactory.makeFunctionParameterList(parameterList)
         

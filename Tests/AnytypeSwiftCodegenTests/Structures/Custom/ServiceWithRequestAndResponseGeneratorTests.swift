@@ -55,10 +55,6 @@ final class ServiceGeneratorTests: XCTestCase
                 }
 
                 public enum Service {
-                    public typealias RequestParameters = Request
-                    private static func request(_ parameters: RequestParameters) -> Request {
-                        parameters
-                    }
                     public static func invoke(name: String = "abc", seedCount: Int = 44, queue: DispatchQueue? = nil) -> Future<Response, Error> {
                         self.invoke(parameters: .init(name: name, seedCount: seedCount), on: queue)
                     }
@@ -75,10 +71,6 @@ final class ServiceGeneratorTests: XCTestCase
                 }
 
                 public enum Service {
-                    public typealias RequestParameters = Request
-                    private static func request(_ parameters: RequestParameters) -> Request {
-                        parameters
-                    }
                     public static func invoke(name: String = "def", seed: String = 45, queue: DispatchQueue? = nil) -> Future<Response, Error> {
                         self.invoke(parameters: .init(name: name, seed: seed), on: queue)
                     }

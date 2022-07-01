@@ -71,12 +71,6 @@ class PrivateInvocationGenerator: SyntaxRewriter {
             return .invocation(result)
             
         case .function:
-            let parameterName = options.parameterName
-            let parameterType = options.parameterType
-            let functionReturnType = options.functionReturnType
-            let staticKeywordSyntax = SyntaxFactory.makeStaticKeyword()
-            let functionKeywordSyntax = SyntaxFactory.makeToken(.funcKeyword, presence: .present)
-            let functionNameSyntax = SyntaxFactory.makeIdentifier(options.functionName)
             let invocationSyntax = self.generate(part: .invocation, options: options).raw()
             let bodySyntax = SyntaxFactory.makeCodeBlockItemList([
                 .init {b in b.useItem(invocationSyntax)}
@@ -85,16 +79,18 @@ class PrivateInvocationGenerator: SyntaxRewriter {
             
             let args = [Argument(
                 name: SyntaxFactory.makeWildcardKeyword().description,
-                internalName: parameterName,
-                type: parameterType
+                internalName: options.parameterName,
+                type: options.parameterType
             )]
+
+            let result = FunctionDeclGenerator.generate(
+                staticFlag: true,
+                name: options.functionName,
+                args: args,
+                returnType: options.functionReturnType,
+                body: bodyCodeBlockSyntax
+            )
             
-            let functionSignatureSyntax = FunctionSignatureGenerator().generate(args: args, returnType: functionReturnType)
-            
-            let attributesListSyntax = SyntaxFactory.makeAttributeList([
-                .init(staticKeywordSyntax.withTrailingTrivia(.spaces(1)))
-            ])
-            let result = SyntaxFactory.makeFunctionDecl(attributes: attributesListSyntax, modifiers: nil, funcKeyword: functionKeywordSyntax.withTrailingTrivia(.spaces(1)), identifier: functionNameSyntax, genericParameterClause: nil, signature: functionSignatureSyntax, genericWhereClause: nil, body: bodyCodeBlockSyntax)
             return .function(result)
             
         case .structure:
