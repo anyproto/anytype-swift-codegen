@@ -54,8 +54,9 @@ struct GenerateServiceCommand: CommandProtocol {
         
         let output = [
             CommandUtility.generateHeader(importsFilePath: options.importsFilePath),
-            try formatter.format(source: result.description)
+            result.description
         ].joined(separator: "\n")
-        try target.write(output)
+        let formattedOutput = try formatter.format(source: output)
+        try target.write(formattedOutput)
     }
 }
