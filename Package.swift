@@ -32,7 +32,8 @@ let package = Package(
             name: "AnytypeSwiftCodegen",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxParser", package: "swift-syntax")
+                .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+                .product(name: "SwiftFormat", package: "swift-format")
             ]),
         .testTarget(
             name: "AnytypeSwiftCodegenTests",

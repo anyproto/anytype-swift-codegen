@@ -18,22 +18,11 @@ public class InitializerGenerator: Generator {
             lhs.key < rhs.key
         }) {
             let (structure, storedVariables) = fields
-            let variablesNamesAndTypes = storedVariables.map({($0.name, $0.typeAnnotationSyntax?.type)}).filter{$0.1 != nil}
-            guard !variablesNamesAndTypes.isEmpty else { continue }
-
-            let functionParameters = variablesNamesAndTypes.compactMap { (name, type) -> FunctionParameterSyntax? in
-                guard let type = type else { return nil }
-                // TODO: Remove trailingTrivia somehow... type is immutable :(
-                let typeName = type.description.trimmingCharacters(in: .whitespacesAndNewlines)
-                return FunctionParameterSyntax { b in
-                    b.useFirstName(SyntaxFactory.makeIdentifier(name))
-                    b.useColon(SyntaxFactory.makeColonToken(trailingTrivia: [.spaces(1)]))
-                    b.useType(SyntaxFactory.makeTypeIdentifier(typeName))
-                    if name != variablesNamesAndTypes.last?.0 {
-                        b.useTrailingComma(SyntaxFactory.makeCommaToken(trailingTrivia: [.spaces(1)]))
-                    }
-                }
-            }
+            guard !storedVariables.isEmpty else { continue }
+            
+            let args = storedVariables.map { Argument.init(from: $0) }
+            
+            let functionParameters = FunctionParametersGenerator().generate(args: args)
             
             let parameters = ParameterClauseSyntax { b in
                 b.useLeftParen(SyntaxFactory.makeLeftParenToken())
@@ -43,7 +32,7 @@ public class InitializerGenerator: Generator {
                 b.useRightParen(SyntaxFactory.makeRightParenToken(leadingTrivia: [.spaces(0)], trailingTrivia: [.spaces(0)]))
             }
                                                 
-            let statements: [CodeBlockItemSyntax] = variablesNamesAndTypes.map{$0.0}.compactMap {
+            let statements: [CodeBlockItemSyntax] = storedVariables.map{$0.name}.compactMap {
                 let list: [CodeBlockItemSyntax] = [
                     CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makeSelfKeyword())),
                     CodeBlockItemSyntax.init{_ in }.withItem(.init(SyntaxFactory.makePeriodToken())),

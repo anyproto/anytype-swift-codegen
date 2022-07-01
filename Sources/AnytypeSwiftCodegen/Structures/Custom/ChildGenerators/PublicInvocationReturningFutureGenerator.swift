@@ -7,37 +7,23 @@ class PublicInvocationReturningFutureGenerator: SyntaxRewriter {
         var closureVariableName = "promise"
         var resultType: String = "Future<Response, Error>"
     }
-    static func convert(_ variables: [Variable]) -> [(String, String)] {
-        variables.compactMap { entry -> (String, String)? in
-            guard let type = entry.typeAnnotationSyntax?.type.description.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
-            let name = entry.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            return (name, type)
-        }
-    }
     
     func with(variables list: [Variable]) -> Self {
-        self.storedPropertiesList = Self.convert(list)
+        self.storedPropertiesList = list.map { Argument.init(from: $0) }
         return self
     }
     
-    func with(propertiesList list: [(String, String)]) -> Self {
+    func with(arguments list: [Argument]) -> Self {
         self.storedPropertiesList = list
         return self
     }
     
-    var storedPropertiesList: [(String, String)] = [
-        ("abc", "String"),
-        ("def", "Int")
-    ]
-    var options: Options = .init()
-    convenience init(options: Options, variables: [Variable]) {
-        self.init(options: options)
-        self.storedPropertiesList = Self.convert(variables)
-    }
-    init(options: Options) {
+    var storedPropertiesList: [Argument]
+    var options: Options
+    init(options: Options = .init(), arguments: [Argument] = []) {
         self.options = options
+        self.storedPropertiesList = arguments
     }
-    override init() {}
     
     enum Part {
         case initializer, closureArgument, closure, function
@@ -70,12 +56,12 @@ extension PublicInvocationReturningFutureGenerator: Generator {
             let invocationSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(calleeSyntax), dot: SyntaxFactory.makePeriodToken(), name: keywordSyntax, declNameArguments: nil)
             
             let functionCallArgumentList =
-                self.storedPropertiesList.compactMap{$0.0}.compactMap { name in
+                self.storedPropertiesList.compactMap { arg in
                 TupleExprElementSyntax.init { b in
-                    b.useLabel(SyntaxFactory.makeIdentifier(name))
+                    b.useLabel(SyntaxFactory.makeIdentifier(arg.name))
                     b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                    b.useExpression(.init(SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(name), declNameArguments: nil)))
-                    if name != self.storedPropertiesList.last?.0 {
+                    b.useExpression(.init(SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(arg.name), declNameArguments: nil)))
+                    if arg.name != self.storedPropertiesList.last?.name {
                         b.useTrailingComma(SyntaxFactory.makeCommaToken().withTrailingTrivia(.spaces(1)))
                     }
                 }
@@ -141,18 +127,8 @@ extension PublicInvocationReturningFutureGenerator: Generator {
             let staticKeyword = SyntaxFactory.makeStaticKeyword()
             let functionKeyword = SyntaxFactory.makeFuncKeyword()
             let functionNameSyntax = SyntaxFactory.makeIdentifier(options.functionName)
-            let namesAndTypes = self.storedPropertiesList
             
-            let parameterList: [FunctionParameterSyntax] = namesAndTypes.compactMap { (name, type) in
-                FunctionParameterSyntax.init{ b in
-                    b.useFirstName(SyntaxFactory.makeIdentifier(name))
-                    b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                    b.useType(SyntaxFactory.makeTypeIdentifier(type))
-                    if name != namesAndTypes.last?.0 {
-                        b.useTrailingComma(SyntaxFactory.makeCommaToken().withTrailingTrivia(.spaces(1)))
-                    }
-                }
-            }
+            let parameterList = FunctionParametersGenerator().generate(args: storedPropertiesList)
             
             let parametersListSyntax = SyntaxFactory.makeFunctionParameterList(parameterList)
             

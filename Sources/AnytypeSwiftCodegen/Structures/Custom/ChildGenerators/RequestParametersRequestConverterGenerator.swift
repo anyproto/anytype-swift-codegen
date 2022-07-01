@@ -14,8 +14,8 @@ class RequestParametersRequestConverterGenerator: SyntaxRewriter {
     
     static func convert(_ variables: [Variable]) -> [(String, String)] {
         variables.compactMap { entry -> (String, String)? in
-            guard let type = entry.typeAnnotationSyntax?.type.description.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
-            let name = entry.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let type = entry.typeName
+            let name = entry.name
             return (name, type)
         }
     }

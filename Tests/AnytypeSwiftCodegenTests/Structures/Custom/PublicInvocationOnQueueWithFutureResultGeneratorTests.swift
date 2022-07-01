@@ -14,9 +14,9 @@ final class PublicInvocationOnQueueReturningFutureGeneratorTests: XCTestCase
 {
     func test_basic() throws
     {
-        let propertiesList: [(String, String)] = [
-            ("abc", "String"),
-            ("def", "Int")
+        let arguments = [
+            Argument(name: "abc", type: "String"),
+            Argument(name: "def", type: "Int", defaultValue: "45")
         ]
         let source = """
             struct Invocation {
@@ -24,8 +24,8 @@ final class PublicInvocationOnQueueReturningFutureGeneratorTests: XCTestCase
             """
 
         let expected = """
-            public static func invoke(abc: String, def: Int, queue: DispatchQueue? = nil) -> Future<Response, Error> {
-            self.invoke(parameters: .init(abc: abc, def: def), on: queue)
+            public static func invoke(abc: String, def: Int = 45, queue: DispatchQueue? = nil) -> Future<Response, Error> {
+                self.invoke(parameters: .init(abc: abc, def: def), on: queue)
             }
 
             """
@@ -33,7 +33,7 @@ final class PublicInvocationOnQueueReturningFutureGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: PublicInvocationOnQueueReturningFutureGenerator().with(propertiesList: propertiesList)
+            using: PublicInvocationOnQueueReturningFutureGenerator().with(arguments: arguments)
         )
     }
 }

@@ -11,7 +11,8 @@ final class InitializerGeneratorTests: XCTestCase
             """
 
         let expected = """
-
+            
+            
             """
 
         try runTest(
@@ -26,7 +27,8 @@ final class InitializerGeneratorTests: XCTestCase
         let source = """
             struct Response {
                 typealias Error = Int
-                var internalError: Error? = 0
+                var internalError: Error?
+                var integerValue: Int = 43
                 var error: Error {
                   get {return 0}
                   set {theError = newValue}
@@ -39,10 +41,10 @@ final class InitializerGeneratorTests: XCTestCase
             """
 
         let expected = """
-
-            public extension Response {
-                init(internalError: Error?) {
+            extension Response {
+                public init(internalError: Error?, integerValue: Int = 43) {
                     self.internalError = internalError
+                    self.integerValue = integerValue
                 }
             }
 
@@ -67,14 +69,13 @@ final class InitializerGeneratorTests: XCTestCase
             """
 
         let expected = """
-
-            internal extension Foo {
+            extension Foo {
                 init(int: Int) {
                     self.int = int
                 }
             }
-
-            internal extension Foo.Bar {
+            
+            extension Foo.Bar {
                 init(bool: Bool) {
                     self.bool = bool
                 }

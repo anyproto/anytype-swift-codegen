@@ -32,7 +32,7 @@ func runTest<T>(
 
     let syntax = try parseString(tweak(source))
 
-    let result = generator.generate(syntax).description
+    let result = try CodeFormatter().format(source: generator.generate(syntax).description)
 
     let diffString = Diffing<String>.lines.diff(tweak(expected), result)?.0
 
@@ -55,15 +55,22 @@ func runTest<T>(
 // MARK: - Parse string or file
 func parseString(_ source: String) throws -> SourceFileSyntax
 {
+    let sourceURL = try createFile(source)
+
+    let syntax = try SyntaxParser.parse(sourceURL)
+
+    return syntax
+}
+
+func createFile(_ source: String) throws -> URL
+{
     let sourceURL = URL(fileURLWithPath: NSTemporaryDirectory())
         .appendingPathComponent(UUID().uuidString)
         .appendingPathExtension("swift")
 
     try source.write(to: sourceURL, atomically: true, encoding: .utf8)
 
-    let syntax = try SyntaxParser.parse(sourceURL)
-
-    return syntax
+    return sourceURL
 }
 
 // MARK: - Private
