@@ -3,18 +3,18 @@ import Foundation
 
 struct Variable {
     internal init(
-        nameSyntax: PatternSyntax? = nil,
-        typeAnnotationSyntax: TypeAnnotationSyntax? = nil,
+        nameSyntax: PatternSyntax,
+        typeAnnotationSyntax: TypeAnnotationSyntax,
         accessor: Accessor = .none,
-        accessLevel: TokenKind? = nil
+        accessLevel: TokenKind? = nil,
+        initializerClauseSyntax: InitializerClauseSyntax? = nil
     ) {
         self.nameSyntax = nameSyntax
         self.typeAnnotationSyntax = typeAnnotationSyntax
         self.accessor = accessor
         self.accessLevel = accessLevel ?? .internalKeyword
+        self.initializerClauseSyntax = initializerClauseSyntax
     }
-    
-    static let zero = Variable()
     
     enum Accessor {
         case none
@@ -26,15 +26,15 @@ struct Variable {
         }
     }
     
-    var name: String { nameSyntax?.description ?? "" }
-    var isEmpty: Bool { nameSyntax == nil }
-    var typeAnnotation: String { typeAnnotationSyntax?.description ?? "" }
+    var name: String { nameSyntax.description.trimmingCharacters(in: .whitespacesAndNewlines) }
+    var typeName: String { typeAnnotationSyntax.type.description.trimmingCharacters(in: .whitespacesAndNewlines) }
     var computed: Bool { accessor.isGetter }
-    var unknownType: Bool { typeAnnotationSyntax == nil }
+    var defaultValue: String? { initializerClauseSyntax?.value.description }
     
-    let nameSyntax: PatternSyntax?
-    let typeAnnotationSyntax: TypeAnnotationSyntax?
+    let nameSyntax: PatternSyntax
+    let typeAnnotationSyntax: TypeAnnotationSyntax
     var accessor: Accessor = .none
+    let initializerClauseSyntax: InitializerClauseSyntax?
     
     var accessLevel: TokenKind = .internalKeyword
     func inaccessibleDueToAccessLevel() -> Bool {
@@ -51,7 +51,7 @@ struct Variable {
 }
 
 class VariableFilter {
-    func variable(_ variable: VariableDeclSyntax) -> Variable {
+    func variable(_ variable: VariableDeclSyntax) -> Variable? {
         for binding in variable.bindings {
             let accessLevel: TokenKind? = variable.modifiers?
                 .compactMap({$0})
@@ -59,16 +59,19 @@ class VariableFilter {
                 .map(\.tokenKind)
                 .filter(Variable.accessLevels().contains)
                 .first
-                            
+            
+            guard let typeAnnotation = binding.typeAnnotation else { return nil }
+            
             var variable = Variable(
                 nameSyntax: binding.pattern,
-                typeAnnotationSyntax: binding.typeAnnotation,
-                accessLevel: accessLevel
+                typeAnnotationSyntax: typeAnnotation,
+                accessLevel: accessLevel,
+                initializerClauseSyntax: binding.initializer
             )
             variable.accessor = accessor(accessor: binding.accessor, variable: variable)
             return variable
         }
-        return .zero
+        return nil
     }
     
     
@@ -79,7 +82,7 @@ class VariableFilter {
     private func setters(setter: AccessorDeclSyntax?, variable: Variable) -> Variable.Accessor {
         guard let body = setter?.body else { return .getter }
         if #available(OSX 10.13, *) {
-            let variableName = variable.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let variableName = variable.name
             let bodyDescription = body.description
             let ranges = self.setterVariablePattern.matches(in: bodyDescription, options: [], range: NSRange.init(location: 0, length: bodyDescription.count)).filter{$0.numberOfRanges > 0}.map {$0.range(withName: self.setterVariableGroupName)}
             let containsVariableAtLeft = [ranges.first].compactMap{$0}.map{(bodyDescription as NSString).substring(with: $0).contains(variableName)}.allSatisfy({$0})

@@ -8,15 +8,15 @@ import XCTest
 final class ServiceGeneratorTests: XCTestCase
 {
     // New test.
-    func disabled_test_public() throws
+    func test_public() throws
     {
         let source = """
             struct Outer {
                 struct Fruit {
                     struct Apple {
                         struct Request {
-                            var name: String = .init()
-                            var seedCount: Int = .init()
+                            var name: String = "abc"
+                            var seedCount: Int = 44
                             struct Kind {}
                         }
                         struct Response {
@@ -27,8 +27,8 @@ final class ServiceGeneratorTests: XCTestCase
                     }
                     struct Raspberry {
                         struct Request {
-                            var name: String = .init()
-                            var seed: String = .init()
+                            var name: String = "def"
+                            var seed: String = 45
                             struct Kind {}
                         }
                         struct Response {
@@ -41,54 +41,54 @@ final class ServiceGeneratorTests: XCTestCase
             }
             """
         
+        let service = """
+        service ClientCommands {
+            rpc FruitApple (Outer.Fruit.Apple.Request) returns (Outer.Fruit.Apple.Response);
+            rpc FruitRaspberry (Outer.Fruit.Raspberry.Request) returns (Outer.Fruit.Raspberry.Response);
+        }
+        """
+        
         let expected = """
-            
-            public extension Outer.Fruit.Apple {
-            private struct Invocation {
-            static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitApple(data) }
-            }
-            
-            public enum Service {
-            public typealias RequestParameters = Request
-            private static func request(_ parameters: RequestParameters) -> Request {
-            parameters
-            }
-            public static func invoke(name: String, seedCount: Int, queue: DispatchQueue? = nil) -> Future<Response, Error> {
-            self.invoke(parameters: .init(name: name, seedCount: seedCount), on: queue)
-            }
-            public static func invoke(name: String, seedCount: Int) -> Result<Response, Error> {
-            self.result(.init(name: name, seedCount: seedCount))
-            }
-            
-            }
-            }
-            
-            public extension Outer.Fruit.Raspberry {
-            private struct Invocation {
-            static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitRaspberry(data) }
-            }
-            
-            public enum Service {
-            public typealias RequestParameters = Request
-            private static func request(_ parameters: RequestParameters) -> Request {
-            parameters
-            }
-            public static func invoke(name: String, seed: String, queue: DispatchQueue? = nil) -> Future<Response, Error> {
-            self.invoke(parameters: .init(name: name, seed: seed), on: queue)
-            }
-            public static func invoke(name: String, seed: String) -> Result<Response, Error> {
-            self.result(.init(name: name, seed: seed))
+            extension Outer.Fruit.Apple {
+                private struct Invocation {
+                    static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitApple(data) }
+                }
+
+                public enum Service {
+                    public static func invoke(name: String = "abc", seedCount: Int = 44, queue: DispatchQueue? = nil) -> Future<Response, Error> {
+                        self.invoke(parameters: .init(name: name, seedCount: seedCount), on: queue)
+                    }
+                    public static func invoke(name: String = "abc", seedCount: Int = 44) -> Result<Response, Error> {
+                        self.result(.init(name: name, seedCount: seedCount))
+                    }
+
+                }
             }
 
-            }
+            extension Outer.Fruit.Raspberry {
+                private struct Invocation {
+                    static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitRaspberry(data) }
+                }
+
+                public enum Service {
+                    public static func invoke(name: String = "def", seed: String = 45, queue: DispatchQueue? = nil) -> Future<Response, Error> {
+                        self.invoke(parameters: .init(name: name, seed: seed), on: queue)
+                    }
+                    public static func invoke(name: String = "def", seed: String = 45) -> Result<Response, Error> {
+                        self.result(.init(name: name, seed: seed))
+                    }
+
+                }
             }
 
             """
         
+        let serviceFilePath = try createFile(service)
+        
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceGenerator(scope: .public, templatePath: "", serviceFilePath: "")
+            using: ServiceGenerator(scope: .public, templatePath: "", serviceFilePath: serviceFilePath.path)
         )
     }
 }

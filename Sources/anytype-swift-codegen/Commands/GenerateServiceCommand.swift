@@ -50,10 +50,13 @@ struct GenerateServiceCommand: CommandProtocol {
         )
         .generate(sourceFile)
         
+        let formatter = CodeFormatter()
+        
         let output = [
             CommandUtility.generateHeader(importsFilePath: options.importsFilePath),
             result.description
         ].joined(separator: "\n")
-        try target.write(output)
+        let formattedOutput = try formatter.format(source: output)
+        try target.write(formattedOutput)
     }
 }

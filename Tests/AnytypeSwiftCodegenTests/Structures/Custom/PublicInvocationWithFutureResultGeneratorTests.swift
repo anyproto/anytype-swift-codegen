@@ -38,14 +38,18 @@ final class PublicInvocationReturningFutureGeneratorTests: XCTestCase
 {
     func test_basic() throws
     {
+        let propertiesList = [
+            Argument(name: "abc", type: "String"),
+            Argument(name: "def", type: "Int", defaultValue: "44")
+        ]
         let source = """
             struct Invocation {
             }
             """
 
         let expected = """
-            public static func invoke(abc: String, def: Int) -> Future<Response, Error> {
-            .init{promise in promise(self.result(.init(abc: abc, def: def)))}
+            public static func invoke(abc: String, def: Int = 44) -> Future<Response, Error> {
+                .init { promise in promise(self.result(.init(abc: abc, def: def))) }
             }
 
             """
@@ -53,7 +57,7 @@ final class PublicInvocationReturningFutureGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: PublicInvocationReturningFutureGenerator()
+            using: PublicInvocationReturningFutureGenerator().with(arguments: propertiesList)
         )
     }
 }

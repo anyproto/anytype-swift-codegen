@@ -10,12 +10,12 @@ class StoredPropertiesExtractor: SyntaxRewriter {
     // MARK: Extraction
     func extract(_ node: StructDeclSyntax) -> [String: (TypeSyntax, [Variable])] {
         let variables = node.members.members.enumerated()
-            .compactMap{
+            .compactMap {
                 $0.element.decl.as(VariableDeclSyntax.self)
-            }.map {
+            }.compactMap {
                 filter.variable($0)
             }.filter {
-                !($0.isEmpty || $0.computed || $0.unknownType || $0.inaccessibleDueToAccessLevel())
+                !($0.computed || $0.inaccessibleDueToAccessLevel())
             }
                 
         let identifier = node.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)

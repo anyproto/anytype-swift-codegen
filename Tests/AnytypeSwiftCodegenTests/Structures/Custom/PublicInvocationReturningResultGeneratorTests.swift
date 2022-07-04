@@ -8,17 +8,13 @@
 import XCTest
 @testable import AnytypeSwiftCodegen
 
-//public static func invoke(id: String, size: Anytype_Model_Image.Size) -> Result<Response, Error> {
-//self.result(.init(id: id, size: size))
-//}
-
 final class PublicInvocationReturningResultGeneratorTests: XCTestCase
 {
     func test_basic() throws
     {
-        let propertiesList: [(String, String)] = [
-            ("abc", "String"),
-            ("def", "Int")
+        let propertiesList = [
+            Argument(name: "abc", type: "String"),
+            Argument(name: "def", type: "Int", defaultValue: "44")
         ]
         let source = """
             struct Invocation {
@@ -26,8 +22,8 @@ final class PublicInvocationReturningResultGeneratorTests: XCTestCase
             """
 
         let expected = """
-            public static func invoke(abc: String, def: Int) -> Result<Response, Error> {
-            self.result(.init(abc: abc, def: def))
+            public static func invoke(abc: String, def: Int = 44) -> Result<Response, Error> {
+                self.result(.init(abc: abc, def: def))
             }
 
             """
@@ -35,7 +31,7 @@ final class PublicInvocationReturningResultGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: PublicInvocationReturningResultGenerator().with(propertiesList: propertiesList)
+            using: PublicInvocationReturningResultGenerator().with(arguments: propertiesList)
         )
     }
 }
