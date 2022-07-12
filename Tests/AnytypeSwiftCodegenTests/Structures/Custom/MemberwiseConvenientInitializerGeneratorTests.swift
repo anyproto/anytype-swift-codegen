@@ -12,7 +12,6 @@ final class InitializerGeneratorTests: XCTestCase
 
         let expected = """
             
-            
             """
 
         try runTest(
@@ -41,6 +40,7 @@ final class InitializerGeneratorTests: XCTestCase
             """
 
         let expected = """
+            
             extension Response {
                 public init(internalError: Error?, integerValue: Int = 43) {
                     self.internalError = internalError
@@ -48,6 +48,7 @@ final class InitializerGeneratorTests: XCTestCase
                 }
             }
 
+            
             """
 
         try runTest(
@@ -69,18 +70,20 @@ final class InitializerGeneratorTests: XCTestCase
             """
 
         let expected = """
+            
             extension Foo {
-                init(int: Int) {
+                public init(int: Int) {
                     self.int = int
                 }
             }
             
             extension Foo.Bar {
-                init(bool: Bool) {
+                public init(bool: Bool) {
                     self.bool = bool
                 }
             }
 
+            
             """
 
         try runTest(

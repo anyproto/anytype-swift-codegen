@@ -15,7 +15,6 @@ import SwiftSyntax
 
 class PublicInvocationOnQueueReturningFutureGenerator: SyntaxRewriter {
     struct Options {
-        var invocationMethodName = "invoke"
         var functionName = "invoke"
         var functionParameterQueueName = "queue"
         var functionParameterQueueType = "DispatchQueue?"
@@ -70,59 +69,23 @@ extension PublicInvocationOnQueueReturningFutureGenerator: Generator {
     func generate(_ part: Part, options: Options) -> PartResult {
         switch part {
         case .initializer:
-            let keywordSyntax = SyntaxFactory.makeInitKeyword()
-            let calleeSyntax = SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(""), declNameArguments: nil)
-                                    
-            let invocationSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(calleeSyntax), dot: SyntaxFactory.makePeriodToken(), name: keywordSyntax, declNameArguments: nil)
-                        
-            let functionCallArgumentList =
-                self.storedPropertiesList.compactMap { variable in
-                TupleExprElementSyntax.init { b in
-                    b.useLabel(SyntaxFactory.makeIdentifier(variable.name))
-                    b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                    b.useExpression(.init(SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(variable.name), declNameArguments: nil)))
-                    if variable.name != self.storedPropertiesList.last?.name {
-                        b.useTrailingComma(SyntaxFactory.makeCommaToken().withTrailingTrivia(.spaces(1)))
-                    }
-                }
-            }
-            
-            let functionCallArgumentListSyntax = SyntaxFactory.makeTupleExprElementList(functionCallArgumentList)
-            
-            let result =
-                SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(invocationSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: functionCallArgumentListSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
+            let args = storedPropertiesList.map { CallArgument(parameter: $0.name, value: $0.name)}
+            let result = FunctionCallGenerator.generate(methodName: ".init", args: args)
             return .initializer(.init(result))
         
         case .invocation:
             
-            let parametersTupleExprElementSyntax: TupleExprElementSyntax
-            if case let .initializer(value) = self.generate(.initializer, options: options) {
-                parametersTupleExprElementSyntax = .init { (b) in
-                    b.useLabel(SyntaxFactory.makeIdentifier(options.invocationMethodParametersName))
-                    b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                    b.useExpression(value)
-                    b.useTrailingComma(SyntaxFactory.makeCommaToken().withTrailingTrivia(.spaces(1)))
-                }
-            }
-            else {
-                parametersTupleExprElementSyntax = .init({ (b) in })
+            var args = [CallArgument]()
+        
+            if case let .initializer(initCall) = self.generate(.initializer, options: options) {
+                args.append(CallArgument(parameter: "parameters", value: initCall))
             }
             
-            let queueTupleExprElementSyntax: TupleExprElementSyntax = .init { (b) in
-                b.useLabel(SyntaxFactory.makeIdentifier(options.invocationMethodQueueName))
-                b.useColon(SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)))
-                b.useExpression(.init(SyntaxFactory.makeVariableExpr(options.functionParameterQueueName)))
-            }
-            
-            
-            let functionCallArgumentSyntax = [parametersTupleExprElementSyntax, queueTupleExprElementSyntax]
-            let functionCallListArgumentSyntax = SyntaxFactory.makeTupleExprElementList(functionCallArgumentSyntax)
-            
-            let calleeName = SyntaxFactory.makeSelfKeyword()
-            let invocationMethodName = options.invocationMethodName
-            let memberAccessSyntax = SyntaxFactory.makeMemberAccessExpr(base: .init(SyntaxFactory.makeIdentifierExpr(identifier: calleeName, declNameArguments: nil)), dot: SyntaxFactory.makePeriodToken(), name: SyntaxFactory.makeIdentifier(invocationMethodName), declNameArguments: nil)
-            let functionInvocationSyntax = SyntaxFactory.makeFunctionCallExpr(calledExpression: .init(memberAccessSyntax), leftParen: SyntaxFactory.makeLeftParenToken(), argumentList: functionCallListArgumentSyntax, rightParen: SyntaxFactory.makeRightParenToken(), trailingClosure: nil, additionalTrailingClosures: nil)
-            
+            args.append(CallArgument(
+                parameter: options.invocationMethodQueueName,
+                value: options.functionParameterQueueName
+            ))
+            let functionInvocationSyntax = FunctionCallGenerator.generate(methodName: "self.invoke", args: args)
             return .invocation(.init(functionInvocationSyntax))
             
         case .function:

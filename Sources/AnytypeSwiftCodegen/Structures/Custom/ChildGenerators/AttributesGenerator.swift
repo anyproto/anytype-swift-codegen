@@ -1,6 +1,8 @@
 import Foundation
 import SwiftSyntax
 
+/// Example:
+/// public static
 enum AccessLevel {
     case publicLevel
     case privateLevel

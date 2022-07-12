@@ -1,23 +1,25 @@
 import SwiftSyntax
+import SwiftSyntaxParser
 
 public class ErrorProtocolGenerator: Generator {
+    
+    private let stencilGenerator = StencillErrorProtocolGenerator()
+    
     public init() { }
     
     public func generate(_ node: SourceFileSyntax) -> Syntax {
-        let statements = NestedTypesScanner().scan(node)
+        let objects = NestedTypesScanner().scan(node)
             .flatMap(findAllErrors)
-            .map(generateEnheritanceExtension)
+            .map(generateObjects)
         
-        return SyntaxFactory.makeSourceFile(statements).asSyntax
+        let result = stencilGenerator.generate(objects: objects)
+        let syntax = try? SyntaxParser.parse(source: result)
+        return syntax?.asSyntax ?? Syntax.blank
     }
     
     // MARK: - Private
-    private func generateEnheritanceExtension(_ item: DeclarationNotation) -> CodeBlockItemSyntax {
-        let extendedType = SyntaxFactory.makeTypeIdentifier(item.fullIdentifier)
-            
-        return SyntaxFactory
-            .generateEnheritanceExtension(extendedType: extendedType, inheritedType: "Swift.Error")
-            .asCode
+    private func generateObjects(_ item: DeclarationNotation) -> InitializerGeneratorObject {
+        return InitializerGeneratorObject(type: item.fullIdentifier, fields: [])
     }
     
     private func findAllErrors(_ declaration: DeclarationNotation) -> [DeclarationNotation] {

@@ -1,6 +1,10 @@
 import Foundation
 import SwiftSyntax
 
+/// Example:
+/// public static func invoke(id: String, size: Anytype_Model_Image.Size) -> Future<Response, Error> {
+///     // body
+/// }
 enum FunctionDeclGenerator {
     
     static func generate(

@@ -23,11 +23,24 @@ final class ErrorProtocolGeneratorTests: XCTestCase
                     }
                 }
             }
+            
+            enum Scope2 {
+                struct Request {
+                    enum Kind {}
+                }
+                struct Response {
+                    struct Error {
+                        enum Code {}
+                    }
+                }
+            }
             """
 
         let expected = """
+            
             extension Scope.Response.Error: Swift.Error {}
-
+            extension Scope2.Response.Error: Swift.Error {}
+            
             """
 
         try runTest(

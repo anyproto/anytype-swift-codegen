@@ -49,6 +49,15 @@ final class ServiceGeneratorTests: XCTestCase
         """
         
         let expected = """
+            import Combine
+            import Foundation
+            import Lib
+            import SwiftProtobuf
+
+            enum Anytype_Middleware_Error {
+              static let domain: String = "org.anytype.middleware.services"
+            }
+            
             extension Outer.Fruit.Apple {
                 private struct Invocation {
                     static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitApple(data) }

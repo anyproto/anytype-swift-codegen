@@ -1,6 +1,9 @@
 import SwiftSyntax
+import SwiftSyntaxParser
 
 public class ServiceGenerator {
+    
+    private let stencilGenerator = StencillServiceGenerator()
     
     private let responseName: String = "Response"
     
@@ -24,16 +27,20 @@ public class ServiceGenerator {
     }
     
     public func generate(_ node: SourceFileSyntax) -> Syntax {
-        let codeBlockItemListSyntax = scan(node)
-            .compactMap(generate)
-            .compactMap(CodeBlockItemSyntax.init{_ in}.withItem)
+        let objects = scan(node).compactMap(mapToObjects(serviceData:))
         
-        let result = SyntaxFactory.makeSourceFile(
-            statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax),
-            eofToken: SyntaxFactory.makeToken(.eof, presence: .present)
-        )
+        let result = stencilGenerator.generate(objects: objects)
+        let syntax = try? SyntaxParser.parse(source: result)
+        return syntax?.asSyntax ?? Syntax.blank
         
-        return Syntax(result)
+//            .compactMap(CodeBlockItemSyntax.init{_ in}.withItem)
+        
+//        let result = SyntaxFactory.makeSourceFile(
+//            statements: SyntaxFactory.makeCodeBlockItemList(codeBlockItemListSyntax),
+//            eofToken: SyntaxFactory.makeToken(.eof, presence: .present)
+//        )
+        
+//        return Syntax(result)
     }
     
     // MARK: Scan
@@ -115,6 +122,32 @@ extension ServiceGenerator: Generator {
         
         let result = SyntaxFactory.makeEnumDecl(attributes: enumAttributesListSyntax, modifiers: nil, enumKeyword: SyntaxFactory.makeEnumKeyword().withTrailingTrivia(.spaces(1)), identifier: serviceNameIdentifier, genericParameters: nil, inheritanceClause: nil, genericWhereClause: nil, members: memberDeclBlockSyntax)
         return Syntax(result.withLeadingTrivia(.newlines(1)))
+    }
+    
+    private func mapToObjects(serviceData: ServiceData) -> StencillServiceGeneratorObject? {
+        
+        let scopeName = serviceData.this.fullIdentifier
+//        let scopeTypeSyntax = SyntaxFactory.makeTypeIdentifier(scopeName)
+        // NOTE: scopeName except first scope. Custom behaviour.
+        
+        guard let endpoints = RpcServiceFileParser().parse(serviceFilePath),
+                let suffix = scopeMatcher.bestRpc(scope: serviceData, endpoints: endpoints)?.name
+        else {
+            return nil
+        }
+        
+        let structIdentifier = serviceData.request.fullIdentifier
+        let properties = (serviceData.request.syntax as? StructDeclSyntax)
+            .flatMap(storedPropertiesExtractor.extract)
+        let variables = properties?[structIdentifier]?.1 ?? []
+        
+        let object = StencillServiceGeneratorObject(
+            type: scopeName,
+            invocationName: suffix,
+            requestArguments: variables.map { Argument.init(from: $0) }
+        )
+        
+        return object
     }
             
     private func generate(serviceData: ServiceData) -> Syntax {

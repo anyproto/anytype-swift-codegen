@@ -32,7 +32,8 @@ func runTest<T>(
 
     let syntax = try parseString(tweak(source))
 
-    let result = try CodeFormatter().format(source: generator.generate(syntax).description)
+//    let result = try CodeFormatter().format(source: generator.generate(syntax).description)
+    let result = generator.generate(syntax).description
 
     let diffString = Diffing<String>.lines.diff(tweak(expected), result)?.0
 

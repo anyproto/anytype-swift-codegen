@@ -16,11 +16,12 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-syntax", branch: "0.50600.1"),
-        .package(url: "https://github.com/apple/swift-format", from: "0.50600.1"),
         .package(url: "https://github.com/Carthage/Commandant", from: "0.17.0"),
         .package(url: "https://github.com/thoughtbot/Curry", from: "4.0.2"),
         .package(url: "https://github.com/JohnSundell/Files", from: "4.1.1"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.0.0"),
+        .package(url: "https://github.com/stencilproject/Stencil", from: "0.14.2"),
+        .package(url: "https://github.com/SwiftGen/StencilSwiftKit", from: "2.8.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -33,7 +34,8 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
-                .product(name: "SwiftFormat", package: "swift-format")
+                .product(name: "Stencil", package: "Stencil"),
+                .product(name: "StencilSwiftKit", package: "StencilSwiftKit")
             ]),
         .testTarget(
             name: "AnytypeSwiftCodegenTests",

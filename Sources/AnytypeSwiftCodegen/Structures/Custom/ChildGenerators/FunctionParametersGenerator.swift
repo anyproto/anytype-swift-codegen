@@ -1,6 +1,8 @@
 import Foundation
 import SwiftSyntax
 
+/// Example:
+/// id: String, size: Anytype_Model_Image.Size
 enum FunctionParametersGenerator {
     
     static func generate(args: [Argument]) -> [FunctionParameterSyntax] {
