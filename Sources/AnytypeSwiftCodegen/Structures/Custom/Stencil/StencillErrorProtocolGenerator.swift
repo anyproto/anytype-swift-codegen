@@ -4,33 +4,17 @@ import StencilSwiftKit
 
 final class StencillErrorProtocolGenerator {
     
-    func generate(objects: [InitializerGeneratorObject]) -> String {
+    func generate(objects: [InitializerGeneratorObject], template: String) throws -> String {
         
         let context = [
           "objects": objects
         ]
         
         let template = StencilSwiftTemplate(
-            templateString: StencillErrorProtocolGeneratorTemplate,
+            templateString: template,
             environment: stencilSwiftEnvironment()
         )
         
-        do {
-            let rendered = try template.render(context)
-            return rendered
-        } catch {
-            print(error)
-            return ""
-        }
-        
-//        let loader = DictionaryLoader(templates: Templates.all)
-//        let environment = Environment(loader: loader, extensions: [Extension.default])
-//
-//        let context = [
-//          "objects": objects
-//        ]
-        
-//        let rendered = try? environment.renderTemplate(name: Templates.errorName, context: context)
-//        return rendered ?? ""
+        return try template.render(context)
     }
 }

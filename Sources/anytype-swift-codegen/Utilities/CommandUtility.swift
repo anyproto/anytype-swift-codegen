@@ -15,8 +15,12 @@ final class CommandUtility {
             throw Error.filesAreEqual(input, output)
         }
 
-        guard let source = try? File(path: input), let target = try? File(path: output) else {
-            throw Error.couldNotOpen(input, output)
+        guard let source = try? File(path: input) else {
+            throw Error.couldNotOpen(input)
+        }
+        
+        guard let target = try? File(path: output) else {
+            throw Error.couldNotOpen(output)
         }
         
         guard source.extension == FileExtensions.swiftExtension.extName else {

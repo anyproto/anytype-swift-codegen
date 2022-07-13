@@ -4,17 +4,18 @@ import SwiftSyntaxParser
 public class ErrorProtocolGenerator: Generator {
     
     private let stencilGenerator = StencillErrorProtocolGenerator()
+    private let template: String
     
-    public init() { }
+    public init(template: String) {
+        self.template = template
+    }
     
-    public func generate(_ node: SourceFileSyntax) -> Syntax {
+    public func generate(_ node: SourceFileSyntax) throws -> String {
         let objects = NestedTypesScanner().scan(node)
             .flatMap(findAllErrors)
             .map(generateObjects)
         
-        let result = stencilGenerator.generate(objects: objects)
-        let syntax = try? SyntaxParser.parse(source: result)
-        return syntax?.asSyntax ?? Syntax.blank
+        return try stencilGenerator.generate(objects: objects, template: template)
     }
     
     // MARK: - Private

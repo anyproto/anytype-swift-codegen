@@ -10,6 +10,18 @@ import XCTest
 
 final class ErrorProtocolGeneratorTests: XCTestCase
 {
+    private enum Constants {
+        static let template = """
+        {% for object in objects %}
+        Type = {{ object.type }}
+        Fields:
+        {% for field in object.fields %}
+        {{ field.name }},{{field.type}},{{ field.defaultValue }}
+        {% endfor %}
+        {% endfor %}
+        """
+    }
+    
     func test_basic() throws
     {
         let source = """
@@ -38,15 +50,17 @@ final class ErrorProtocolGeneratorTests: XCTestCase
 
         let expected = """
             
-            extension Scope.Response.Error: Swift.Error {}
-            extension Scope2.Response.Error: Swift.Error {}
+            Type = Scope.Response.Error
+            Fields:
+            Type = Scope2.Response.Error
+            Fields:
             
             """
 
         try runTest(
             source: source,
             expected: expected,
-            using: ErrorProtocolGenerator()
+            using: ErrorProtocolGenerator(template: Constants.template)
         )
     }
 }

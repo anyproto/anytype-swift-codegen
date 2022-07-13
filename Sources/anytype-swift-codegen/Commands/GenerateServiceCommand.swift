@@ -11,7 +11,6 @@ extension GenerateServiceCommand {
         let filePath: String
         let outputFilePath: String
         let templateFilePath: String
-        let importsFilePath: String
         let serviceFilePath: String
         
         static let defaultStringValue: String = ""
@@ -20,8 +19,7 @@ extension GenerateServiceCommand {
             curry(Self.init)
                 <*> m <| Option(key: "filePath", defaultValue: defaultStringValue, usage: "The path to the file in 'generate' action.")
                 <*> m <| Option(key: "outputFilePath", defaultValue: defaultStringValue, usage: "Use with flag --filePath. It will output to this file")
-                <*> m <| Option(key: "templateFilePath", defaultValue: defaultStringValue, usage: "Template file path")
-                <*> m <| Option(key: "importsFilePath", defaultValue: defaultStringValue, usage: "Import file that will be included at top after comments if presented")
+                <*> m <| Option(key: "templateFilePath", defaultValue: defaultStringValue, usage: "Stencill template path")
                 <*> m <| Option(key: "serviceFilePath", defaultValue: defaultStringValue, usage: "Rpc service file that contains Rpc services descriptions in .proto (protobuffers) format.")
         }
     }
@@ -42,22 +40,17 @@ struct GenerateServiceCommand: CommandProtocol {
             throw Error.fileShouldHaveExtension(serviceFile.path, .protobufExtension)
         }
         
+        let templateFile = try File(path: options.templateFilePath)
+        let template = try String(contentsOfFile: templateFile.path)
+        
         let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: source.path))
-        let result = ServiceGenerator(
+        let result = try ServiceGenerator(
             scope: .public,
-            templatePath: options.templateFilePath,
+            template: template,
             serviceFilePath: options.serviceFilePath
         )
         .generate(sourceFile)
         
-//        let formatter = CodeFormatter()
-        
-        let output = [
-            CommandUtility.generateHeader(importsFilePath: options.importsFilePath),
-            result.description
-        ].joined(separator: "\n")
-//        let formattedOutput = try formatter.format(source: output)
-//        try target.write(formattedOutput)
-        try target.write(output)
+        try target.write(result)
     }
 }

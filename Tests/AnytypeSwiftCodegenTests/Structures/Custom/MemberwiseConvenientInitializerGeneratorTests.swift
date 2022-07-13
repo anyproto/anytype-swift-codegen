@@ -3,6 +3,18 @@ import XCTest
 
 final class InitializerGeneratorTests: XCTestCase
 {
+    private enum Constants {
+        static let template = """
+        {% for object in objects %}
+        Type = {{ object.type }}
+        Fields:
+        {% for field in object.fields %}
+        {{ field.name }},{{field.type}},{{ field.defaultValue }}
+        {% endfor %}
+        {% endfor %}
+        """
+    }
+    
     func test_empty() throws
     {
         let source = """
@@ -12,12 +24,15 @@ final class InitializerGeneratorTests: XCTestCase
 
         let expected = """
             
+            Type = Response
+            Fields:
+            
             """
 
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator(scope: .public)
+            using: InitializerGenerator(template: Constants.template)
         )
     }
 
@@ -41,20 +56,17 @@ final class InitializerGeneratorTests: XCTestCase
 
         let expected = """
             
-            extension Response {
-                public init(internalError: Error?, integerValue: Int = 43) {
-                    self.internalError = internalError
-                    self.integerValue = integerValue
-                }
-            }
+            Type = Response
+            Fields:
+            internalError,Error?,
+            integerValue,Int,43
 
-            
             """
 
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator(scope: .public)
+            using: InitializerGenerator(template: Constants.template)
         )
     }
 
@@ -71,25 +83,19 @@ final class InitializerGeneratorTests: XCTestCase
 
         let expected = """
             
-            extension Foo {
-                public init(int: Int) {
-                    self.int = int
-                }
-            }
-            
-            extension Foo.Bar {
-                public init(bool: Bool) {
-                    self.bool = bool
-                }
-            }
-
+            Type = Foo
+            Fields:
+            int,Int,
+            Type = Foo.Bar
+            Fields:
+            bool,Bool,
             
             """
 
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator(scope: .internal)
+            using: InitializerGenerator(template: Constants.template)
         )
     }
 }

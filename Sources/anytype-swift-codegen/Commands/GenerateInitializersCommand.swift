@@ -10,7 +10,7 @@ extension GenerateInitializersCommand {
     struct Options: OptionsProtocol {
         let filePath: String
         let outputFilePath: String
-        let importsFilePath: String
+        let templateFilePath: String
         
         static let defaultStringValue: String = ""
         
@@ -18,7 +18,7 @@ extension GenerateInitializersCommand {
             curry(Self.init)
                 <*> m <| Option(key: "filePath", defaultValue: defaultStringValue, usage: "The path to the file in 'generate' action.")
                 <*> m <| Option(key: "outputFilePath", defaultValue: defaultStringValue, usage: "Use with flag --filePath. It will output to this file")
-                <*> m <| Option(key: "importsFilePath", defaultValue: defaultStringValue, usage: "Import file that will be included at top after comments if presented")
+                <*> m <| Option(key: "templateFilePath", defaultValue: defaultStringValue, usage: "Stencill template path")
         }
     }
 }
@@ -29,20 +29,17 @@ struct GenerateInitializersCommand: CommandProtocol {
 
     func run(_ options: Options) throws {
         let (source, target) = try CommandUtility
-            .validatedFiles(input: options.filePath, output: options.outputFilePath)
+            .validatedFiles(
+                input: options.filePath,
+                output: options.outputFilePath
+            )
         
+        let templateFile = try File(path: options.templateFilePath)
+        let template = try String(contentsOfFile: templateFile.path)
         
         let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: source.path))
-        let result = InitializerGenerator(scope: .public).generate(sourceFile)
-
-//        let formatter = CodeFormatter()
+        let result = try InitializerGenerator(template: template).generate(sourceFile)
         
-        let output = [
-            CommandUtility.generateHeader(importsFilePath: options.importsFilePath),
-            result.description
-        ].joined(separator: "\n")
-//        let formattedOutput = try formatter.format(source: output)
-//        try target.write(formattedOutput)
-        try target.write(output)
+        try target.write(result)
     }
 }

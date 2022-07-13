@@ -5,5 +5,5 @@ enum Error: Swift.Error {
     case filesAreEqual(String, String)
     case filesAreCorrupted
     case fileShouldHaveExtension(String, FileExtensions)
-    case couldNotOpen(String, String)
+    case couldNotOpen(String)
 }

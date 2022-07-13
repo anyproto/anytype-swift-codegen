@@ -10,12 +10,10 @@ struct StencillServiceGeneratorObject {
 
 final class StencillServiceGenerator {
     
-    func generate(objects: [StencillServiceGeneratorObject]) -> String {
-//        let loader = DictionaryLoader(templates: Templates.all)
-//        let environment = Environment(loader: loader, extensions: [Extension.default])
-        
+    func generate(objects: [StencillServiceGeneratorObject], template: String) throws -> String {
+
         let template = StencilSwiftTemplate(
-            templateString: StencillServiceGeneratorTemplate,
+            templateString: template,
             environment: stencilSwiftEnvironment()
         )
         
@@ -23,13 +21,6 @@ final class StencillServiceGenerator {
           "endpoints": objects
         ]
         
-        do {
-            let rendered = try template.render(context)
-//            let rendered = try environment.renderTemplate(name: Templates.serviceName, context: context)
-            return rendered ?? ""
-        } catch {
-            print(error)
-            return ""
-        }
+        return try template.render(context)
     }
 }
