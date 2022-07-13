@@ -6,8 +6,7 @@ let registry: CommandRegistry<Swift.Error> = {
     let registry = CommandRegistry<Swift.Error>()
     registry.register(HelpCommand(registry: registry))
     registry.register(GenerateServiceCommand())
-    registry.register(GenerateInitializersCommand())
-    registry.register(GenerateErrorAdoptionCommand())
+    registry.register(GenerateObjectExtensionCommand())
     return registry
 }()
 

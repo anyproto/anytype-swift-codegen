@@ -1,13 +1,21 @@
 import XCTest
 @testable import AnytypeSwiftCodegen
 
-/// TODO:
-/// Fix output later.
-/// Trust code not test in this case.
-///
 final class ServiceGeneratorTests: XCTestCase
 {
-    // New test.
+    private enum Constants {
+        static let template = """
+        {% for endpoint in endpoints %}
+        Type = {{ endpoint.type }}
+        InvocationName = {{ endpoint.invocationName }}
+        Arguments:
+        {% for field in endpoint.requestArguments %}
+        {{ field.name }},{{field.type}},{{ field.defaultValue }}
+        {% endfor %}
+        {% endfor %}
+        """
+    }
+    
     func test_public() throws
     {
         let source = """
@@ -49,46 +57,24 @@ final class ServiceGeneratorTests: XCTestCase
         """
         
         let expected = """
-            extension Outer.Fruit.Apple {
-                private struct Invocation {
-                    static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitApple(data) }
-                }
-
-                public enum Service {
-                    public static func invoke(name: String = "abc", seedCount: Int = 44, queue: DispatchQueue? = nil) -> Future<Response, Error> {
-                        self.invoke(parameters: .init(name: name, seedCount: seedCount), on: queue)
-                    }
-                    public static func invoke(name: String = "abc", seedCount: Int = 44) -> Result<Response, Error> {
-                        self.result(.init(name: name, seedCount: seedCount))
-                    }
-
-                }
-            }
-
-            extension Outer.Fruit.Raspberry {
-                private struct Invocation {
-                    static func invoke(_ data: Data?) -> Data? { Lib.ServiceFruitRaspberry(data) }
-                }
-
-                public enum Service {
-                    public static func invoke(name: String = "def", seed: String = 45, queue: DispatchQueue? = nil) -> Future<Response, Error> {
-                        self.invoke(parameters: .init(name: name, seed: seed), on: queue)
-                    }
-                    public static func invoke(name: String = "def", seed: String = 45) -> Result<Response, Error> {
-                        self.result(.init(name: name, seed: seed))
-                    }
-
-                }
-            }
+            
+            Type = Outer.Fruit.Apple
+            InvocationName = FruitApple
+            Arguments:
+            name,String,"abc"
+            seedCount,Int,44
+            Type = Outer.Fruit.Raspberry
+            InvocationName = FruitRaspberry
+            Arguments:
+            name,String,"def"
+            seed,String,45
 
             """
-        
-        let serviceFilePath = try createFile(service)
         
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceGenerator(scope: .public, templatePath: "", serviceFilePath: serviceFilePath.path)
+            using: ServiceGenerator(template: Constants.template, serviceProtobuf: service)
         )
     }
 }

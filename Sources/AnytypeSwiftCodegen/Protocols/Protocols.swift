@@ -2,7 +2,7 @@ import Foundation
 import SwiftSyntax
 
 protocol Generator {
-    func generate(_ node: SourceFileSyntax) -> Syntax
+    func generate(_ node: SourceFileSyntax) throws -> String
 }
 
 protocol NestableDeclSyntaxProtocol: DeclSyntaxProtocol {

@@ -1,6 +1,5 @@
 import SwiftSyntax
 
-
 class NestedTypesScanner {
     func scan(_ node: SourceFileSyntax) -> [DeclarationNotation] {
         node.statements.compactMap {

@@ -1,14 +1,21 @@
 import Foundation
 import SwiftSyntax
 
+struct StoredPropertiesExtractorResult {
+    let fullIdentifier: String
+    let identifier: String
+    let syntax: TypeSyntax
+    let variables: [Variable]
+}
+
 class StoredPropertiesExtractor: SyntaxRewriter {
-    // StructName -> (Struct, [MemberItem])
-    var extractedFields: [String: (TypeSyntax, [Variable])] = [:]
+    
+    var extractedFields: [String: StoredPropertiesExtractorResult] = [:]
     
     var filter = VariableFilter()
     
     // MARK: Extraction
-    func extract(_ node: StructDeclSyntax) -> [String: (TypeSyntax, [Variable])] {
+    func extract(_ node: StructDeclSyntax) -> [String: StoredPropertiesExtractorResult] {
         let variables = node.members.members.enumerated()
             .compactMap {
                 $0.element.decl.as(VariableDeclSyntax.self)
@@ -17,10 +24,15 @@ class StoredPropertiesExtractor: SyntaxRewriter {
             }.filter {
                 !($0.computed || $0.inaccessibleDueToAccessLevel())
             }
-                
-        let identifier = node.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines)
-        extractedFields[identifier] = (node.fullIdentifier, variables)
         
+        let result = StoredPropertiesExtractorResult(
+            fullIdentifier: node.fullIdentifier.description.trimmingCharacters(in: .whitespacesAndNewlines),
+            identifier: node.identifier.description.trimmingCharacters(in: .whitespacesAndNewlines),
+            syntax: node.fullIdentifier,
+            variables: variables
+        )
+                
+        extractedFields[result.fullIdentifier] = result
         return extractedFields
     }
     
