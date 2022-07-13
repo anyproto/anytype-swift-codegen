@@ -6,14 +6,14 @@ import SwiftSyntax
 import SwiftSyntaxParser
 import AnytypeSwiftCodegen
 
-extension GenerateInitializersCommand {
+extension GenerateObjectExtensionCommand {
     struct Options: OptionsProtocol {
         let filePath: String
         let outputFilePath: String
         let templateFilePath: String
-        
+
         static let defaultStringValue: String = ""
-        
+
         public static func evaluate(_ m: CommandMode) -> Result<Self, CommandantError<Swift.Error>> {
             curry(Self.init)
                 <*> m <| Option(key: "filePath", defaultValue: defaultStringValue, usage: "The path to the file in 'generate' action.")
@@ -23,9 +23,9 @@ extension GenerateInitializersCommand {
     }
 }
 
-struct GenerateInitializersCommand: CommandProtocol {
-    let verb = "generateInitializes"
-    let function = "Generate initializers"
+struct GenerateObjectExtensionCommand: CommandProtocol {
+    let verb = "generateObjectExtension"
+    let function = "Generate object extensions"
 
     func run(_ options: Options) throws {
         
@@ -35,7 +35,7 @@ struct GenerateInitializersCommand: CommandProtocol {
         let target = try File(path: options.outputFilePath)
         
         let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: options.filePath))
-        let result = try InitializerGenerator(template: template).generate(sourceFile)
+        let result = try ObjectExtensionGenerator(template: template).generate(sourceFile)
         
         try target.write(result)
     }

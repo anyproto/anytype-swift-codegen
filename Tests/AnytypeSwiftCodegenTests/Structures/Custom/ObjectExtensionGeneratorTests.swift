@@ -1,11 +1,12 @@
 import XCTest
 @testable import AnytypeSwiftCodegen
 
-final class InitializerGeneratorTests: XCTestCase
+final class ObjectExtensionGeneratorTests: XCTestCase
 {
     private enum Constants {
         static let template = """
         {% for object in objects %}
+        FullType = {{ object.fullType }}
         Type = {{ object.type }}
         Fields:
         {% for field in object.fields %}
@@ -24,6 +25,7 @@ final class InitializerGeneratorTests: XCTestCase
 
         let expected = """
             
+            FullType = Response
             Type = Response
             Fields:
             
@@ -32,7 +34,7 @@ final class InitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator(template: Constants.template)
+            using: ObjectExtensionGenerator(template: Constants.template)
         )
     }
 
@@ -56,6 +58,7 @@ final class InitializerGeneratorTests: XCTestCase
 
         let expected = """
             
+            FullType = Response
             Type = Response
             Fields:
             internalError,Error?,
@@ -66,7 +69,7 @@ final class InitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator(template: Constants.template)
+            using: ObjectExtensionGenerator(template: Constants.template)
         )
     }
 
@@ -83,10 +86,12 @@ final class InitializerGeneratorTests: XCTestCase
 
         let expected = """
             
+            FullType = Foo
             Type = Foo
             Fields:
             int,Int,
-            Type = Foo.Bar
+            FullType = Foo.Bar
+            Type = Bar
             Fields:
             bool,Bool,
             
@@ -95,7 +100,7 @@ final class InitializerGeneratorTests: XCTestCase
         try runTest(
             source: source,
             expected: expected,
-            using: InitializerGenerator(template: Constants.template)
+            using: ObjectExtensionGenerator(template: Constants.template)
         )
     }
 }

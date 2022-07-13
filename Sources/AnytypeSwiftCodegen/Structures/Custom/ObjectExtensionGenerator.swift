@@ -1,7 +1,7 @@
 import SwiftSyntax
 import SwiftSyntaxParser
 
-public class InitializerGenerator: Generator {
+public class ObjectExtensionGenerator: Generator {
     
     private let stencilGenerator = StencilInitializerGenerator()
     
@@ -19,11 +19,11 @@ public class InitializerGenerator: Generator {
         let objects = fieldsExtractor.extractedFields
             .sorted { $0.key < $1.key }
             .map { fields -> ObjectInfo in
-            let (type ,(_, storedVariables)) = fields
+                let (_, data) = fields
             
-            let fields = storedVariables.map { Argument(from: $0) }
-            return ObjectInfo(type: type, fields: fields)
-        }
+                let fields = data.variables.map { Argument(from: $0) }
+                return ObjectInfo(fullType: data.fullIdentifier, type: data.identifier, fields: fields)
+            }
         
         return try stencilGenerator.generate(objects: objects, template: template)
     }

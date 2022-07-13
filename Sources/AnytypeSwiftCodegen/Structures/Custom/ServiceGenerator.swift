@@ -62,7 +62,7 @@ extension ServiceGenerator: Generator {
         let structIdentifier = serviceData.request.fullIdentifier
         let properties = (serviceData.request.syntax as? StructDeclSyntax)
             .flatMap(storedPropertiesExtractor.extract)
-        let variables = properties?[structIdentifier]?.1 ?? []
+        let variables = properties?[structIdentifier]?.variables ?? []
         
         let object = EndpointInfo(
             type: scopeName,
