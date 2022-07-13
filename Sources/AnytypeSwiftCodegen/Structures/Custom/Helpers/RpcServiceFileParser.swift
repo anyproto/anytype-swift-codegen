@@ -6,10 +6,7 @@ class RpcServiceFileParser {
         pattern: "rpc\\s+(?<name>\\w+)\\s+\\((?<request>[^\\(\\)]+)\\)\\s+returns\\s+\\((?<response>[^\\(\\)]+)\\)"
     )
     
-    func parse(_ filePath: String) -> [Endpoint]? {
-        guard FileManager.default.fileExists(atPath: filePath) else { return nil }
-        guard let string = try? String(contentsOfFile: filePath) else { return nil }
-        
+    func parse(_ string: String) -> [Endpoint]? {
         return string
             .split(separator: "\n")
             .map(String.init)

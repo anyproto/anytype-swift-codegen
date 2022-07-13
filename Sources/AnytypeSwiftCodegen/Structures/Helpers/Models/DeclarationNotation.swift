@@ -1,18 +1,10 @@
 import SwiftSyntax
 
-struct DeclarationNotation: CustomStringConvertible {
-    var description: String { output(0) }
+struct DeclarationNotation {
     
-    func output(_ level: Int) -> String {
-        let leading = String(repeating: "\t", count: level)
-        let trailing = String(repeating: "\t", count: level)
-        
-        return leading + "\(identifier)->\n" + declarations.compactMap{$0.output(level + 1)}.joined(separator: "\n") + trailing
-    }
-    
-    var declaration: DeclarationType = .unknown
-    var syntax: DeclSyntaxProtocol = SyntaxFactory.makeBlankUnknownDecl()
-    var declarations: [DeclarationNotation] = []
+    let declaration: DeclarationType
+    let syntax: DeclSyntaxProtocol
+    let declarations: [DeclarationNotation]
     
     var identifier: String {
         switch self.syntax {
@@ -34,10 +26,5 @@ struct DeclarationNotation: CustomStringConvertible {
             assertionFailure()
             return ""
         }
-    }
-    
-    mutating func configured(declarations: [DeclarationNotation]) -> Self {
-        self.declarations = declarations
-        return self
     }
 }

@@ -30,24 +30,19 @@ struct GenerateServiceCommand: CommandProtocol {
     let function = "Generate protobuf services"
 
     func run(_ options: Options) throws {        
-        let (source, target) = try CommandUtility
-            .validatedFiles(input: options.filePath, output: options.outputFilePath)
-         
-        guard let serviceFile = try? File(path: options.serviceFilePath) else {
-            throw Error.serviceFileNotExists(options.serviceFilePath)
-        }
-        guard serviceFile.extension == FileExtensions.protobufExtension.extName else {
-            throw Error.fileShouldHaveExtension(serviceFile.path, .protobufExtension)
-        }
+        
+        let serviceFile = try File(path: options.serviceFilePath)
+        let serviceProtobuf = try String(contentsOfFile: serviceFile.path)
         
         let templateFile = try File(path: options.templateFilePath)
         let template = try String(contentsOfFile: templateFile.path)
         
-        let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: source.path))
+        let target = try File(path: options.outputFilePath)
+        
+        let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: options.filePath))
         let result = try ServiceGenerator(
-            scope: .public,
             template: template,
-            serviceFilePath: options.serviceFilePath
+            serviceProtobuf: serviceProtobuf
         )
         .generate(sourceFile)
         

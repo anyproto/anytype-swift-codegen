@@ -5,19 +5,17 @@ public class ServiceGenerator {
     
     private let stencilGenerator = StencillServiceGenerator()
         
-    private let scope: AccessLevelScope
     private let template: String
-    private let serviceFilePath: String
+    private let serviceProtobuf: String
     
     private let scopeMatcher = ScopeMatcher(threshold: 8) // size of scope name + 1.
     private let nestedTypesScanner = NestedTypesScanner()
     
     private let storedPropertiesExtractor = StoredPropertiesExtractor()
     
-    public init(scope: AccessLevelScope, template: String, serviceFilePath: String) {
-        self.scope = scope
+    public init(template: String, serviceProtobuf: String) {
         self.template = template
-        self.serviceFilePath = serviceFilePath
+        self.serviceProtobuf = serviceProtobuf
     }
     
     public func generate(_ node: SourceFileSyntax) throws -> String {
@@ -50,12 +48,12 @@ public class ServiceGenerator {
 // MARK: - Private
 extension ServiceGenerator: Generator {
     
-    private func mapToObjects(serviceData: ServiceData) -> StencillServiceGeneratorObject? {
+    private func mapToObjects(serviceData: ServiceData) -> EndpointInfo? {
         
         let scopeName = serviceData.this.fullIdentifier
         // NOTE: scopeName except first scope. Custom behaviour.
         
-        guard let endpoints = RpcServiceFileParser().parse(serviceFilePath),
+        guard let endpoints = RpcServiceFileParser().parse(serviceProtobuf),
                 let suffix = scopeMatcher.bestRpc(scope: serviceData, endpoints: endpoints)?.name
         else {
             return nil
@@ -66,7 +64,7 @@ extension ServiceGenerator: Generator {
             .flatMap(storedPropertiesExtractor.extract)
         let variables = properties?[structIdentifier]?.1 ?? []
         
-        let object = StencillServiceGeneratorObject(
+        let object = EndpointInfo(
             type: scopeName,
             invocationName: suffix,
             requestArguments: variables.map { Argument.init(from: $0) }

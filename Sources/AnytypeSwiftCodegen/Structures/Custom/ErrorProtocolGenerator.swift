@@ -19,8 +19,8 @@ public class ErrorProtocolGenerator: Generator {
     }
     
     // MARK: - Private
-    private func generateObjects(_ item: DeclarationNotation) -> InitializerGeneratorObject {
-        return InitializerGeneratorObject(type: item.fullIdentifier, fields: [])
+    private func generateObjects(_ item: DeclarationNotation) -> ObjectInfo {
+        return ObjectInfo(type: item.fullIdentifier, fields: [])
     }
     
     private func findAllErrors(_ declaration: DeclarationNotation) -> [DeclarationNotation] {

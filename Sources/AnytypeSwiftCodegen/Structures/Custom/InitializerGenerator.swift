@@ -18,11 +18,11 @@ public class InitializerGenerator: Generator {
         
         let objects = fieldsExtractor.extractedFields
             .sorted { $0.key < $1.key }
-            .map { fields -> InitializerGeneratorObject in
+            .map { fields -> ObjectInfo in
             let (type ,(_, storedVariables)) = fields
             
             let fields = storedVariables.map { Argument(from: $0) }
-            return InitializerGeneratorObject(type: type, fields: fields)
+            return ObjectInfo(type: type, fields: fields)
         }
         
         return try stencilGenerator.generate(objects: objects, template: template)

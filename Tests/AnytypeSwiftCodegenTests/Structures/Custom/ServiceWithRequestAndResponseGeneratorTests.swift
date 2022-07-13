@@ -71,12 +71,10 @@ final class ServiceGeneratorTests: XCTestCase
 
             """
         
-        let serviceFilePath = try createFile(service)
-        
         try runTest(
             source: source,
             expected: expected,
-            using: ServiceGenerator(scope: .public, template: Constants.template, serviceFilePath: serviceFilePath.path)
+            using: ServiceGenerator(template: Constants.template, serviceProtobuf: service)
         )
     }
 }

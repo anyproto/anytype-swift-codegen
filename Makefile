@@ -18,10 +18,6 @@ build:
 build-release:
 	xcrun swift build -c release --arch x86_64
 
-build-dependency-swift-format:
-	echo "Start build dependent tool swift-format"
-	xcrun swift build --product swift-format -c release --arch x86_64
-
 clean:
 	xcrun swift package clean
 

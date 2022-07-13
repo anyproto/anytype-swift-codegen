@@ -4,7 +4,7 @@ import StencilSwiftKit
 
 final class StencillErrorProtocolGenerator {
     
-    func generate(objects: [InitializerGeneratorObject], template: String) throws -> String {
+    func generate(objects: [ObjectInfo], template: String) throws -> String {
         
         let context = [
           "objects": objects

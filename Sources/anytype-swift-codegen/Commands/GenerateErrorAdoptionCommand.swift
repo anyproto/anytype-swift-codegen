@@ -28,13 +28,13 @@ struct GenerateErrorAdoptionCommand: CommandProtocol {
     let function = "Generate conformance of Error protocol"
 
     func run(_ options: Options) throws {
-        let (source, target) = try CommandUtility
-            .validatedFiles(input: options.filePath, output: options.outputFilePath)
         
         let templateFile = try File(path: options.templateFilePath)
         let template = try String(contentsOfFile: templateFile.path)
         
-        let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: source.path))
+        let target = try File(path: options.outputFilePath)
+        
+        let sourceFile = try SyntaxParser.parse(URL(fileURLWithPath: options.filePath))
         let result = try ErrorProtocolGenerator(template: template).generate(sourceFile)
         
         try target.write(result)
