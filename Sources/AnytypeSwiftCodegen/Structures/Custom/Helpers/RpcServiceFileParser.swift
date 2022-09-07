@@ -3,7 +3,7 @@ import SwiftSyntax
 
 class RpcServiceFileParser {    
     private let endpointFormat = try! NSRegularExpression(
-        pattern: "rpc\\s+(?<name>\\w+)\\s+\\((?<request>[^\\(\\)]+)\\)\\s+returns\\s+\\((?<response>[^\\(\\)]+)\\)"
+        pattern: "rpc\\s*(?<name>\\w+)\\s*\\((?<request>[^\\(\\)]+)\\)\\s*returns\\s*\\((?<response>[^\\(\\)]+)\\)"
     )
     
     func parse(_ string: String) -> [Endpoint]? {
