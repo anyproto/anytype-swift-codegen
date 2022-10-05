@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "AnytypeSwiftCodegen",
     platforms: [
-        .macOS(.v10_13)
+        .macOS(.v12)
     ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
@@ -15,7 +15,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/apple/swift-syntax", branch: "0.50600.1"),
+        .package(url: "https://github.com/apple/swift-syntax", exact: "0.50700.0"),
         .package(url: "https://github.com/Carthage/Commandant", from: "0.17.0"),
         .package(url: "https://github.com/thoughtbot/Curry", from: "4.0.2"),
         .package(url: "https://github.com/JohnSundell/Files", from: "4.1.1"),
@@ -28,7 +28,13 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .executableTarget(
             name: "anytype-swift-codegen",
-            dependencies: ["AnytypeSwiftCodegen", "Commandant", "Curry", "Files"]),
+            dependencies: ["AnytypeSwiftCodegen", "Commandant", "Curry", "Files"],
+            linkerSettings: [
+                .unsafeFlags([
+                    "-Xlinker", "-rpath", "-Xlinker",
+                    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx"
+                ])
+            ]),
         .target(
             name: "AnytypeSwiftCodegen",
             dependencies: [
