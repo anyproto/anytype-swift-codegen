@@ -10,7 +10,7 @@ let package = Package(
     ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
-        .executable(name: "anytype-swift-codegen", targets: ["anytype-swift-codegen"]),
+//        .executable(name: "anytype-swift-codegen", targets: ["anytype-swift-codegen"]),
 //        .library(name: "AnytypeSwiftCodegen", targets: ["AnytypeSwiftCodegen"]),
         .plugin(name: "ServiceGenPlugin", targets: ["ServiceGenPlugin"])
     ],
@@ -51,7 +51,7 @@ let package = Package(
         ),
         .binaryTarget(
             name: "anytype-codegen-binary",
-            path: "release/anytype-codegen-binary.artifactbundle"
+            path: "Bundle/anytype-codegen-binary.artifactbundle"
         )
     ]
 )

@@ -4,10 +4,10 @@ RELEASE_BIN_FOLDER := $(shell xcrun swift build -c release --arch arm64 --arch x
 clean-release: clean artifacts-clean release
 
 release: build-release
-	echo "Gathering tools in ./release"
-	@mkdir -p ./release
-	@cp $(RELEASE_BIN_FOLDER)/anytype-swift-codegen ./release/anytype-codegen-binary.artifactbundle/anytype-swift-codegen/anytype-swift-codegen
-	@open ./release
+	echo "Gathering tools in ./Bundle"
+	@mkdir -p ./Bundle
+	@cp $(RELEASE_BIN_FOLDER)/anytype-swift-codegen ./Bundle/anytype-codegen-binary.artifactbundle/anytype-swift-codegen/anytype-swift-codegen
+	@open ./Bundle
 
 test:
 	xcrun swift test
@@ -24,7 +24,7 @@ clean:
 
 artifacts-clean:
 	@rm -rf .build
-	@rm -f ./release/*
+	@rm -f ./Bundle/*
 	
 reset-package-cache:
 	swift package reset
