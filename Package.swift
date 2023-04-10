@@ -10,13 +10,13 @@ let package = Package(
     ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
-//        .executable(name: "anytype-swift-codegen", targets: ["anytype-swift-codegen"]),
+        .executable(name: "anytype-swift-codegen", targets: ["anytype-swift-codegen"]),
 //        .library(name: "AnytypeSwiftCodegen", targets: ["AnytypeSwiftCodegen"]),
         .plugin(name: "ServiceGenPlugin", targets: ["ServiceGenPlugin"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", revision: "1.2.2"),
-        .package(url: "https://github.com/jpsim/Yams", from: "5.0.5"),
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.1"),
+        .package(url: "https://github.com/jpsim/Yams", from: "5.0.1"),
         .package(url: "https://github.com/stencilproject/Stencil", from: "0.14.2"),
         .package(url: "https://github.com/SwiftGen/StencilSwiftKit", from: "2.8.0")
     ],
@@ -42,6 +42,16 @@ let package = Package(
             dependencies: [
                 "AnytypeSwiftCodegen"
             ]),
-        .plugin(name: "ServiceGenPlugin", capability: .buildTool())
+        .plugin(
+            name: "ServiceGenPlugin",
+            capability: .buildTool(),
+            dependencies: [
+                "anytype-codegen-binary"
+            ]
+        ),
+        .binaryTarget(
+            name: "anytype-codegen-binary",
+            path: "release/anytype-codegen-binary.artifactbundle"
+        )
     ]
 )
