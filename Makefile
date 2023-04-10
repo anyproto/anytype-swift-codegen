@@ -13,10 +13,10 @@ test:
 	xcrun swift test
 
 build:
-	xcrun swift build
+	xcrun swift build -target anytype-swift-codegen
 
 build-release:
-	xcrun swift build -c release --arch x86_64
+	xcrun swift build -c release --target anytype-swift-codegen --arch arm64 --arch x86_64
 
 clean:
 	xcrun swift package clean

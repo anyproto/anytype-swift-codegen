@@ -2,9 +2,9 @@ import Foundation
 @testable import AnytypeSwiftCodegen
 import XCTest
 
-final class RpcServiceFileParserTests: XCTestCase {
+final class ServiceGeneratorTests: XCTestCase {
     
-    let parser = RpcServiceFileParser()
+    private let parser = ServiceParser()
     
     func test_parser_with_different_spaces() {
         
@@ -29,42 +29,42 @@ final class RpcServiceFileParserTests: XCTestCase {
             rpc WalletConvert(anytype.Rpc.Wallet.Convert.Request)returns     (anytype.Rpc.Wallet.Convert.Response);
         }
         """
+    
+        let result = try? parser.parse(serviceProto: input)
         
-        let expectedResult = [
-            Endpoint(
+        let expectedResult = Service(name: "ClientCommands", rpc: [
+            Rpc(
                 name: "AppGetVersion",
                 request: "anytype.Rpc.App.GetVersion.Request",
                 response: "anytype.Rpc.App.GetVersion.Response"
             ),
-            Endpoint(
+            Rpc(
                 name: "AppSetDeviceState",
                 request: "anytype.Rpc.App.SetDeviceState.Request",
                 response: "anytype.Rpc.App.SetDeviceState.Response"
             ),
-            Endpoint(
+            Rpc(
                 name: "AppShutdown",
                 request: "anytype.Rpc.App.Shutdown.Request",
                 response: "anytype.Rpc.App.Shutdown.Response"
             ),
-            Endpoint(
+            Rpc(
                 name: "BlockDataviewViewSetPosition",
                 request: "anytype.Rpc.BlockDataview.View.SetPosition.Request",
                 response: "anytype.Rpc.BlockDataview.View.SetPosition.Response"
             ),
-            Endpoint(
+            Rpc(
                 name: "WalletCreate",
                 request: "anytype.Rpc.Wallet.Create.Request",
                 response: "anytype.Rpc.Wallet.Create.Response"
             ),
-            Endpoint(
+            Rpc(
                 name: "WalletConvert",
                 request: "anytype.Rpc.Wallet.Convert.Request",
                 response: "anytype.Rpc.Wallet.Convert.Response"
             )
-        ]
-        
-        let result = parser.parse(input)
-        
+        ])
+    
         XCTAssertEqual(result, expectedResult)
     }
 }

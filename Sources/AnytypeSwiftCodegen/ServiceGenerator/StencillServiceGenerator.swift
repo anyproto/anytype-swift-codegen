@@ -2,21 +2,19 @@ import Foundation
 import Stencil
 import StencilSwiftKit
 
-final class StencilInitializerGenerator {
+final class StencillServiceGenerator {
     
-    func generate(objects: [ObjectInfo], template: String) throws -> String {
-        
-        let context = [
-          "objects": objects
-        ]
-        
+    func generate(objects: [Service], template: String) throws -> String {
+
         let template = StencilSwiftTemplate(
             templateString: template,
             environment: stencilSwiftEnvironment()
         )
         
+        let context = [
+          "services": objects
+        ]
+        
         return try template.render(context)
     }
 }
-
-
