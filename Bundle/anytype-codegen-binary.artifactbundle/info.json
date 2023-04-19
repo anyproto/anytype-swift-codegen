@@ -1,0 +1,15 @@
+{
+    "schemaVersion": "1.0",
+    "artifacts": {
+        "anytype-codegen-binary": {
+            "type": "executable",
+            "version": "1.0",
+            "variants": [
+                {
+                    "path": "anytype-swift-codegen/anytype-swift-codegen",
+                    "supportedTriples": ["x86_64-apple-macosx", "arm64-apple-macosx"]
+                },
+            ]
+        }
+    }
+}
