@@ -18,7 +18,8 @@ struct ServiceGenPlugin: BuildToolPlugin {
                 executable: try context.tool(named: "anytype-codegen-binary").path,
                 arguments: [
                     "--yaml-path", configuration?.string ?? "",
-                    "--project-dir", context.package.directory
+                    "--project-dir", context.package.directory,
+                    "--output-dir", context.pluginWorkDirectory
                 ],
                 outputFilesDirectory: context.pluginWorkDirectory
             )
