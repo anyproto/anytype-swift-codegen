@@ -20,6 +20,9 @@ struct ServiceGeneratorCommand: ParsableCommand {
     @Option(name: .long, help: "Project directory")
     private var projectDir: String
     
+    @Option(name: .long, help: "Output directory")
+    private var outputDir: String
+    
     func run() throws {
         
         let path = URL(fileURLWithPath: yamlPath)
@@ -29,7 +32,7 @@ struct ServiceGeneratorCommand: ParsableCommand {
         
         let sourcePath = (projectDir as NSString).appendingPathComponent(config.source)
         let templatePath = (projectDir as NSString).appendingPathComponent(config.template)
-        let outputPath = (projectDir as NSString).appendingPathComponent(config.output)
+        let outputPath = (outputDir as NSString).appendingPathComponent(config.output)
         
         let serviceProtobuf = try String(contentsOfFile: sourcePath)
         let template = try String(contentsOfFile: templatePath)
